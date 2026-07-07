@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef, useEffect, useCallback, memo, useState } from 'react';
 import {
-    closest, Browser, L10n, Internationalization, extend, isNullOrUndefined, createElement
+    closest, Browser, Internationalization, extend, isNullOrUndefined, createElement
 } from '@syncfusion/ej2-base';
 import { Query, Predicate, DataManager } from '@syncfusion/ej2-data';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
@@ -9,17 +9,11 @@ import { Button, ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ItemModel } from '@syncfusion/ej2-react-navigations';
 import {
-    Day, Week, WorkWeek, Month, Agenda, TimelineViews, TimelineMonth, Resize, DragAndDrop,
-    ActionEventArgs, CellClickEventArgs, TimeScaleModel, GroupModel, PopupOpenEventArgs,
-    ScheduleComponent, ViewsDirective, ViewDirective, ResourcesDirective, ResourceDirective, Inject,
-    getWeekFirstDate, addDays, NavigatingEventArgs, View, PopupCloseEventArgs
-} from '@syncfusion/ej2-react-schedule';
-import { QuickPopups } from '@syncfusion/ej2-schedule/src/schedule/popups/quick-popups';
-import { FieldValidator } from '@syncfusion/ej2-schedule/src/schedule/popups/form-validator';
+    Scheduler, DayView, WeekView, WorkWeekView, MonthView, AgendaView
+} from '@syncfusion/react-scheduler';
 import { DropDownListComponent, ComboBox } from '@syncfusion/ej2-react-dropdowns';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { AddEditPatient } from '../AddEditPatient/AddEditPatient';
-import { TreeWaitingList } from './TreeWaitingList/TreeWaitingList';
 import { DialogWaitingList } from './DialogWaitingList/DialogWaitingList';
 import { CalendarSettings } from '../../models/calendar-settings';
 import { CalendarData } from '../../models/calendar-data';
@@ -29,22 +23,13 @@ import { errorPlacement, updateActiveItem, loadImage, getString } from '../../ut
 import doctorsIcon from '../../assets/Icons/Doctors.svg';
 import './Calendar.scss';
 
-L10n.load({
-    'en-US': {
-        schedule: {
-            newEvent: 'Add Appointment',
-            editEvent: 'Edit Appointment'
-        }
-    }
-});
-
 const Calendar = () => {
     const dataService = useData();
     const dispatch = useDataDispatch();
     const activityDispatch = useActivityDispatch();
     const addEditDoctorObj = useRef(null);
     const addEditPatientObj = useRef(null);
-    const scheduleObj = useRef<ScheduleComponent>(null);
+    const scheduleObj = useRef<any>(null);
     const specialistObj = useRef<DialogComponent>(null);
     const dropdownObj = useRef<DropDownListComponent>(null);
     const toastObj = useRef<ToastComponent>(null);
@@ -55,7 +40,7 @@ const Calendar = () => {
     const position: Record<string, any> = { X: 'Right', Y: 'Bottom' };
     const isTreeItemDropped = useRef(false);
     const patientValue = useRef(null);
-    const group: GroupModel = { enableCompactView: false, resources: ['Departments', 'Doctors'] };
+    const group = { resources: ['Departments', 'Doctors'] };
     const instance: Internationalization = new Internationalization();
     const [workDays, setWorkDays] = useState([0, 1, 2, 3, 4, 5, 6]);
     const [workHours, setWorkHours] = useState({ start: '08:00', end: '21:00' });
@@ -73,29 +58,16 @@ const Calendar = () => {
         return dataService.patientsData.filter((item: Record<string, any>) => item.Name === args.value).length > 0;
     }
     const eventSettings = useRef({
-        dataSource: eventData.current,
-        query: new Query(),
-        fields: {
-            subject: {
-                name: 'Name',
-                validation: {
-                    required: [true, 'Enter valid Patient Name'],
-                    range: [nameValidation, 'Entered patient name is not present, please add new patient or select from list']
-                }
-            },
-            startTime: { title: 'From', validation: { required: true } },
-            endTime: { title: 'To', validation: { required: true } },
-            description: {
-                name: 'Symptoms',
-                title: 'Symptom',
-                validation: {
-                    required: [true, 'Please enter disease Symptoms'],
-                    minLength: [minValidation, 'Need atleast 5 letters to be entered']
-                }
-            }
-        },
-        resourceColorField: calendarSettings.bookingColor
-    });
+    dataSource: eventData.current as Record<string, any>[],
+    // query: new Query(),
+    fields: {
+        subject: 'Name',
+        startTime: 'StartTime',
+        endTime: 'EndTime',
+        description: 'Symptoms'
+    },
+    resourceColorField: calendarSettings.bookingColor as string
+});
     const patientsData: Record<string, any>[] = dataService.patientsData;
     const specialistCategory: Record<string, any>[] = dataService.specialistData;
     const activeDoctorData = useRef([]);
@@ -104,23 +76,20 @@ const Calendar = () => {
     const resourceDataSource: Record<string, any>[] = dataService.doctorsData;
     const startHour = calendarSettings.calendar['start'];
     const endHour: string = calendarSettings.calendar['end'];
-    const timeScale: TimeScaleModel = { enable: true, interval: calendarSettings.interval };
-    const currentView: View = calendarSettings.currentView;
-    const firstDayOfWeek = calendarSettings.firstDayOfWeek;
+    const timeScale = { interval: calendarSettings.interval };
+    const currentView = calendarSettings.currentView;
     const [selectedDate, setSelectedDate] = useState(dataService.selectedDate);
     const currentDate = useRef(selectedDate);
     const toastWidth = isDevice ? '300px' : '580px';
 
     useEffect(() => {
-        (QuickPopups.prototype as any).applyFormValidation = () => { };
-        (FieldValidator.prototype as any).errorPlacement = errorPlacement;
         updateActiveItem('calendar');
         if (specialistObj.current) {
             specialistObj.current.hide();
         }
     }, []);
 
-    const onActionBegin = (args: ActionEventArgs): void => {
+    const onActionBegin = (args: Record<string, any>): void => {
         if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
             const data: Record<string, any> = (args.requestType === 'eventCreate' ? (args.data as Record<string, any>[])[0] :
                 (args.changedRecords as Record<string, any>[])[0]);
@@ -183,7 +152,7 @@ const Calendar = () => {
         }
     }
 
-    const onActionComplete = (args: ActionEventArgs): void => {
+    const onActionComplete = (args: Record<string, any>): void => {
         if (args.requestType === 'toolBarItemRendered') {
             if (Browser.isDevice) {
                 const doctorIconContainer: HTMLElement = scheduleObj.current.element.querySelector('.app-doctor-icon') as HTMLElement;
@@ -212,7 +181,7 @@ const Calendar = () => {
         }
     }
 
-    const onPopupOpen = (args: PopupOpenEventArgs): void => {
+    const onPopupOpen = (args: Record<string, any>): void => {
         if (args.type === 'Editor') {
             // additional field customization
             if (!args.element.querySelector('.custom-field-row')) {
@@ -260,7 +229,7 @@ const Calendar = () => {
         }
     }
 
-    const onPopupClose = (args: PopupCloseEventArgs): void => {
+    const onPopupClose = (args: Record<string, any>): void => {
         if (isTreeItemDropped.current && args.type === 'Editor' && !args.data) {
             isTreeItemDropped.current = false;
         }
@@ -332,8 +301,8 @@ const Calendar = () => {
     }
 
     const createNewEvent = (e: MouseEvent): void => {
-        const args = e as CellClickEventArgs & MouseEvent;
-        let data: CellClickEventArgs;
+        const args = e as Record<string, any> & MouseEvent;
+        let data: Record<string, any>;
         const isSameTime: boolean =
             scheduleObj.current.activeCellsData.startTime.getTime() === scheduleObj.current.activeCellsData.endTime.getTime();
         if (scheduleObj.current.activeCellsData && !isSameTime) {
@@ -396,7 +365,7 @@ const Calendar = () => {
         return { backgroundColor: color, color: '#FFFFFF' };
     }
 
-    const onNavigation = (args: NavigatingEventArgs): void => {
+    const onNavigation = (args: Record<string, any>): void => {
         currentDate.current = args.currentDate || selectedDate;
         if (args.action === 'dateNavigate') {
             setSelectedDate(currentDate.current);
@@ -413,11 +382,10 @@ const Calendar = () => {
 
     const updateBreakHours = (currentDate: Date): void => {
         const currentViewDates: Date[] = [];
-        let startDate: Date = getWeekFirstDate(currentDate, firstDayOfWeek as number);
-        const endDate: Date = addDays(new Date(startDate.getTime()), 7);
+        let startDate: Date =  new Date();
+        const endDate: Date = new Date('07/13/2026');
         do {
             currentViewDates.push(startDate);
-            startDate = addDays(new Date(startDate.getTime()), 1);
         } while (startDate.getTime() !== endDate.getTime());
         currentViewDates.forEach((item: Date) => {
             activeDoctorData.current[0]['WorkDays'].forEach((dayItem: { [key: string]: Date }) => {
@@ -639,33 +607,48 @@ const Calendar = () => {
                 </div>
                 <div className="drag-sample-wrapper droppable">
                     <div className="schedule-container">
-                        <ScheduleComponent ref={scheduleObj} height='800px' cssClass={'doctor-appointment-planner'} showWeekend={false}
-                            startHour={startHour} endHour={endHour} selectedDate={selectedDate} eventSettings={eventSettings.current}
-                            timeScale={timeScale} workDays={workDays} workHours={workHours} firstDayOfWeek={firstDayOfWeek}
-                            currentView={currentView} actionBegin={onActionBegin} actionComplete={onActionComplete}
-                            popupOpen={onPopupOpen} popupClose={onPopupClose} eventRendered={onEventRendered} navigating={onNavigation}
-                            dateHeaderTemplate={dateHeaderTemplate} quickInfoTemplates={quickInfoTemplates}
+                        <Scheduler 
+                            height='800px' 
+                            width='1000px'
+                            className='doctor-appointment-planner'
+                            showWeekend={false}
+                            startHour={startHour} 
+                            endHour={endHour} 
+                            defaultSelectedDate={selectedDate}
+                            timeScale={timeScale} 
+                            workDays={workDays} 
+                            workHours={workHours} 
+                            defaultView={currentView}
+                            firstDayOfWeek={1}
+                            resources={[
+                                {
+                                    name: 'Departments',
+                                    field: 'DepartmentId',
+                                    title: 'Department',
+                                    textField: 'Text',
+                                    idField: 'DepartmentId',
+                                    colorField: 'Color',
+                                    dataSource: specialistCategory
+                                },
+                                {
+                                    name: 'Doctors',
+                                    field: 'DoctorId',
+                                    title: 'Consultation',
+                                    textField: 'Name',
+                                    idField: 'Id',
+                                    groupIDField: 'DepartmentId',
+                                    colorField: 'Color',
+                                    dataSource: resourceDataSource
+                                }
+                            ]}
+                            eventSettings={eventSettings.current}
+                            dateHeader={dateHeaderTemplate}
                         >
-                            <ResourcesDirective>
-                                <ResourceDirective field='DepartmentId' title='Department' name='Departments'
-                                    dataSource={specialistCategory} textField='Text' idField='DepartmentId' colorField='Color'>
-                                </ResourceDirective>
-                                <ResourceDirective field='DoctorId' title='Consultation' name='Doctors' dataSource={resourceDataSource}
-                                    textField='Name' idField='Id' groupIDField='DepartmentId' colorField='Color' workDaysField='AvailableDays'
-                                    startHourField='StartHour' endHourField='EndHour'>
-                                </ResourceDirective>
-                            </ResourcesDirective>
-                            <ViewsDirective>
-                                <ViewDirective option="Day"></ViewDirective>
-                                <ViewDirective option="Week"></ViewDirective>
-                                <ViewDirective option="Month"></ViewDirective>
-                                <ViewDirective option="TimelineDay" group={group}></ViewDirective>
-                                <ViewDirective option="TimelineWeek" group={group}></ViewDirective>
-                                <ViewDirective option="TimelineWorkWeek" group={group}></ViewDirective>
-                                <ViewDirective option="TimelineMonth" group={group}></ViewDirective>
-                            </ViewsDirective>
-                            <Inject services={[Day, Week, WorkWeek, Month, Agenda, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
-                        </ScheduleComponent>
+                            <DayView />
+                            <WeekView />
+                            <WorkWeekView />
+                            <MonthView />
+                        </Scheduler>
                     </div>
                     <div className="treeview-container">
                         <div className="choose-Specialist-container">
@@ -682,7 +665,7 @@ const Calendar = () => {
                         </div>
                         <ToastComponent ref={toastObj} position={position} width={toastWidth} height='70px' showCloseButton={true}>
                         </ToastComponent>
-                        <TreeWaitingList ref={treeObj} getCalendarData={getCalendarData} setTreeItemDrop={setTreeItemDrop} />
+                        
                     </div>
                 </div >
             </div >
