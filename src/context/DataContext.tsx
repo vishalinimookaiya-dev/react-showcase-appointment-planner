@@ -49,10 +49,19 @@ const dataReducer = (state: DataContextType, action: Record<string, any>) => {
                 ...state,
                 doctorsData: state.doctorsData.map((doctor: Record<string, any>) => {
                     if (doctor.Id === action.data.Id) {
-                        doctor[action.property] = action.propertyValue;
+                        return {
+                            ...doctor,
+                            [action.property]: action.propertyValue
+                        };
                     }
                     return doctor;
-                })
+                }),
+                activeDoctorData: state.activeDoctorData && state.activeDoctorData.Id === action.data.Id
+                    ? {
+                        ...state.activeDoctorData,
+                        [action.property]: action.propertyValue
+                    }
+                    : state.activeDoctorData
             };
         }
         case 'SET_ACTIVE_DOCTOR': {

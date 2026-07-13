@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { addClass, closest, Internationalization } from '@syncfusion/ej2-base';
 import { TreeViewComponent, DragAndDropEventArgs } from '@syncfusion/ej2-react-navigations';
-import { CellClickEventArgs, getWeekFirstDate, addDays } from '@syncfusion/ej2-react-schedule';
+import { CellClickEventArgs } from '@syncfusion/ej2-react-schedule';
 import { useData } from '../../../context/DataContext';
 import { useWaitingList, useWaitingListDispatch } from '../../../context/WaitingListContext';
 import { CalendarData } from '../../../models/calendar-data';
@@ -19,26 +19,32 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
     const waitingListDispatch = useWaitingListDispatch();
     const treeObj = useRef<TreeViewComponent>(null);
     const instance: Internationalization = new Internationalization();
-    const field = { dataSource: waitingListService.activeWaitingList, id: 'Id', text: 'Name' };
     const doctorsData: Record<string, any>[] = dataService.doctorsData;
     const waitingListID = useRef(waitingListService.waitingList.length + 1);
     let waitingList: Record<string, any>[] = waitingListService.waitingList;
     const specialistCategory = dataService.specialistData;
     const draggedItemId = useRef('');
 
+    const activeList: Record<string, any>[] = waitingListService.activeWaitingList || [];
+
+    const activeDoctorData: Record<string, any>[] = getCalendarData().activeDoctorData || [];
+    const activeDoctorId: string = activeDoctorData.length > 0 ? String(activeDoctorData[0]['Id']) : 'none';
+
+    const signature: string = `${activeDoctorId}::${activeList
+        .map((item: Record<string, any>) => item['Id'])
+        .sort((a: any, b: any) => a - b)
+        .join(',')}`;
+
     useEffect(() => {
-        updateWaitingList();
+        updateActiveWaitingList();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useImperativeHandle(ref, () => ({
-        addWaitingListItem(data: Record<string, any>) {
-            addWaitingListItem(data);
-        },
-        updateWaitingListItem() {
-            updateWaitingListItem();
-        },
-        updateWaitingList(deptId?: number, currentWaitingList?: Record<string, any>[]) {
-            updateWaitingList(deptId, currentWaitingList);
+        addWaitingListItem(data: Record<string, any>) { addWaitingListItem(data); },
+        updateWaitingListItem() { updateWaitingListItem(); },
+        updateWaitingList(deptId?: number, doctorId?: number, currentWaitingList?: Record<string, any>[]) {
+            updateWaitingList(deptId, doctorId, currentWaitingList);
         },
         updateActiveWaitingList(currentWaitingList?: Record<string, any>[]) {
             updateActiveWaitingList(currentWaitingList);
@@ -48,6 +54,12 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
     const addWaitingListItem = (data: Record<string, any>) => {
         data.Id = waitingListID.current;
         waitingListID.current++;
+
+        const active: Record<string, any>[] = getCalendarData().activeDoctorData || [];
+        if (active.length > 0 && (data['DoctorId'] === undefined || data['DoctorId'] === null)) {
+            data['DoctorId'] = active[0]['Id'];
+        }
+
         waitingList.push(data);
         waitingListDispatch({ type: 'SET_WAITING_LIST', data: waitingList });
         updateActiveWaitingList();
@@ -57,27 +69,36 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
         waitingList = waitingList.filter((item: any) => item.Id !== parseInt(draggedItemId.current, 10));
         waitingListDispatch({ type: 'SET_WAITING_LIST', data: waitingList });
         updateActiveWaitingList(waitingList);
-    }
+    };
 
     const updateActiveWaitingList = (currentWaitingList?: Record<string, any>[]) => {
-        const activeDoctorData: Record<string, any>[] = getCalendarData().activeDoctorData;
-        if (activeDoctorData.length > 0) {
-            updateWaitingList(activeDoctorData[0]['DepartmentId'], currentWaitingList);
+        const active: Record<string, any>[] = getCalendarData().activeDoctorData || [];
+        if (active.length > 0) {
+            updateWaitingList(active[0]['DepartmentId'], active[0]['Id'], currentWaitingList);
         } else {
-            updateWaitingList(null, currentWaitingList);
+            updateWaitingList(null, null, currentWaitingList);
         }
-    }
+    };
 
-    const updateWaitingList = (deptId?: number, currentWaitingList?: Record<string, any>[]) => {
-        const calendarData = getCalendarData();
-        const weekFirstDate: Date = getWeekFirstDate(calendarData.currentDate, calendarData.scheduleObj.firstDayOfWeek as number);
-        const waitingListData: Record<string, any>[] = currentWaitingList ? currentWaitingList : waitingListService.waitingList;
-        let filteredData: Record<string, any>[] = calendarData.scheduleObj.eventBase.filterEvents(weekFirstDate, addDays(new Date(weekFirstDate.getTime()), 7), waitingListData);
-        if (deptId) {
-            filteredData = filteredData.filter((item: Record<string, any>) => item['DepartmentId'] === deptId);
+    const updateWaitingList = (deptId?: number, doctorId?: number, currentWaitingList?: Record<string, any>[]) => {
+        const source: Record<string, any>[] = currentWaitingList
+            ? currentWaitingList
+            : waitingListService.waitingList;
+
+        let filtered: Record<string, any>[] = [...source];
+
+        if (doctorId != null) {
+            const doctorFiltered = filtered.filter((item: Record<string, any>) => item['DoctorId'] === doctorId);
+
+            filtered = doctorFiltered.length > 0
+                ? doctorFiltered
+                : filtered.filter((item: Record<string, any>) => item['DepartmentId'] === deptId);
+        } else if (deptId != null) {
+            filtered = filtered.filter((item: Record<string, any>) => item['DepartmentId'] === deptId);
         }
-        waitingListDispatch({ type: 'SET_ACTIVE_WAITING_LIST', data: filteredData });
-    }
+
+        waitingListDispatch({ type: 'SET_ACTIVE_WAITING_LIST', data: filtered });
+    };
 
     const onTreeDragStop = (event: DragAndDropEventArgs): void => {
         const calendarData = getCalendarData();
@@ -99,9 +120,9 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
                         item['Id'] === parseInt(event.draggedNodeData['id'] as string, 10));
                     const cellData: CellClickEventArgs = calendarData.scheduleObj.getCellDetails(event.target);
                     let doctorId: number;
-                    const activeDoctorData: Record<string, any>[] = dataService.activeDoctorData;
-                    if (activeDoctorData.length > 0) {
-                        doctorId = activeDoctorData[0]['Id'];
+                    const activeDocData: Record<string, any>[] = calendarData.activeDoctorData;
+                    if (activeDocData.length > 0) {
+                        doctorId = activeDocData[0]['Id'] as number;
                     } else {
                         const doctor: Record<string, any>[] = doctorsData.filter((item: Record<string, any>) =>
                             item['DepartmentId'] === filteredData[0]['DepartmentId']);
@@ -132,7 +153,7 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
                 }
             }
         }
-    }
+    };
 
     const onItemDrag = (event: any): void => {
         const scheduleObj = getCalendarData().scheduleObj;
@@ -164,7 +185,7 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
             const dragElementIcon: NodeListOf<HTMLElement> = document.querySelectorAll('.e-drag-item.treeview-external-drag .e-icon-expandable');
             dragElementIcon.forEach((node: HTMLElement) => node.style.display = 'none');
         }
-    }
+    };
 
     const treeTemplate = (props: Record<string, any>): JSX.Element => {
         return (
@@ -180,13 +201,24 @@ export const TreeWaitingList = forwardRef(({ getCalendarData, setTreeItemDrop }:
                 </div>
             </div>
         );
-    }
+    };
 
     return (
         <>
-            <TreeViewComponent ref={treeObj} fields={field} cssClass='treeview-external-drag' allowDragAndDrop={true}
-                nodeDragStop={onTreeDragStop.bind(this)} nodeDragging={onItemDrag.bind(this)} nodeTemplate={treeTemplate.bind(this)}>
-            </TreeViewComponent>
+            <TreeViewComponent
+                key={signature}
+                ref={treeObj}
+                fields={{
+                    dataSource: activeList,
+                    id: 'Id',
+                    text: 'Name'
+                }}
+                cssClass='treeview-external-drag'
+                allowDragAndDrop={true}
+                nodeDragStop={onTreeDragStop.bind(this)}
+                nodeDragging={onItemDrag.bind(this)}
+                nodeTemplate={treeTemplate.bind(this)}
+            />
         </>
-    )
-})
+    );
+});

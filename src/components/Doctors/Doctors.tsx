@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
-import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { Button, Color, Variant } from '@syncfusion/react-buttons';
+import { DropDownList } from '@syncfusion/react-dropdowns';
 import { Tooltip, TooltipEventArgs } from '@syncfusion/ej2-react-popups';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { useData, useDataDispatch } from '../../context/DataContext';
@@ -116,12 +116,12 @@ export const Doctors = () => {
         </header>
         <div className="specialization-detail-wrapper">
           <div className="specialization-types">
-            <DropDownListComponent id='Specialization' cssClass='specialization-ddl' dataSource={specializationData}
-              showClearButton={true} change={onSpecializationChange.bind(this)} fields={fields}
-              placeholder='Select a Specialization' popupWidth='100%' popupHeight='230px'
+            <DropDownList id='Specialization' className='specialization-ddl' dataSource={specializationData}
+              clearButton={true} onChange={onSpecializationChange.bind(this)} fields={fields}
+              placeholder='Select a Specialization' popupSettings={{width: '100%', height: '230px'}} variant={Variant.Outlined}
               itemTemplate={itemTemplate.bind(this)} valueTemplate={valueTemplate.bind(this)}>
-            </DropDownListComponent>
-            <ButtonComponent cssClass="e-normal" onClick={onAddDoctor.bind(this)} isPrimary={true}>Add New Doctor</ButtonComponent>
+            </DropDownList>
+            <Button onClick={onAddDoctor.bind(this)} color={Color.Primary}>Add New Doctor</Button>
           </div>
           <div ref={specialistItemObj} className='specialist-display'>
             <>

@@ -244,6 +244,16 @@
     }
 }
 
+.doctor-name-link {
+    cursor: pointer;
+    color: #0078d4;
+    text-decoration: none;
+}
+
+.doctor-name-link:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 850px) {
     .planner-dashboard {
         display: block;

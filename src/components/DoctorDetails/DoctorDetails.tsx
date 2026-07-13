@@ -2,134 +2,205 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Internationalization, extend } from '@syncfusion/ej2-base';
-import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
-import { DialogComponent } from '@syncfusion/ej2-react-popups';
-import { TimePicker, TimePickerComponent } from '@syncfusion/ej2-react-calendars';
-import { EJ2Instance } from '@syncfusion/ej2-react-schedule';
+import { Button, Color, Size } from '@syncfusion/react-buttons';
+import { Dialog } from '@syncfusion/react-popups';
+import { TimePicker } from '@syncfusion/react-calendars';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { useData, useDataDispatch } from '../../context/DataContext';
 import { updateActiveItem, loadImage } from '../../util';
+import { PlusIcon } from "@syncfusion/react-icons";
 import './DoctorDetails.scss';
+
+const normalizeDay = (day: Record<string, any>) => ({
+    ...day,
+    WorkStartHour: day.WorkStartHour ? new Date(day.WorkStartHour) : null,
+    WorkEndHour: day.WorkEndHour ? new Date(day.WorkEndHour) : null,
+    BreakStartHour: day.BreakStartHour ? new Date(day.BreakStartHour) : null,
+    BreakEndHour: day.BreakEndHour ? new Date(day.BreakEndHour) : null
+});
 
 export const DoctorDetails = () => {
     const { id } = useParams();
-    let doctorId = parseInt(id, 10);
+    const doctorId = parseInt(id ?? '', 10);
+
     const dataService = useData();
     const dispatch = useDataDispatch();
-    const addEditDoctorObj = useRef(null);
-    const breakHourObj = useRef<DialogComponent>(null);
-    const deleteConfirmationDialogObj = useRef<DialogComponent>(null);
+    const addEditDoctorObj = useRef<any>(null);
+    const breakHourObj = useRef<any>(null);
+    const deleteConfirmationDialogObj = useRef<any>(null);
     const navigate = useNavigate();
-    let doctorData: Record<string, any>[] = dataService.doctorsData;
-    let activeData: Record<string, any> = doctorData.filter(item => item['Id'] === doctorId)[0];
-    let intl: Internationalization = new Internationalization();
-    let specializationData: Record<string, any>[] = dataService.specialistData;
-    let animationSettings: Record<string, any> = { effect: 'None' };
-    const [breakDays, setBreakDays] = useState(JSON.parse(JSON.stringify(activeData['WorkDays'])));
+
+    if (!dataService || !dispatch) {
+        return null;
+    }
+
+    const doctorData: Record<string, any>[] = dataService.doctorsData ?? [];
+    const activeData = doctorData.find(item => item['Id'] === doctorId);
+
+    const intl: Internationalization = new Internationalization();
+    const specializationData: Record<string, any>[] = dataService.specialistData ?? [];
+    const dialogTarget = document.getElementById('content-area') as HTMLElement | null;
+
+    const [breakDays, setBreakDays] = useState<Record<string, any>[]>(
+        activeData?.WorkDays ? activeData.WorkDays.map(normalizeDay) : []
+    );
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isBreakOpen, setIsBreakOpen] = useState(false);
 
     useEffect(() => {
+        if (!activeData) {
+            navigate('/doctors');
+            return;
+        }
+
         updateActiveItem('doctors');
-        const isDataDiffer: boolean = JSON.stringify(activeData) === JSON.stringify(dataService.activeDoctorData);
+
+        const isDataDiffer =
+            JSON.stringify(activeData) === JSON.stringify(dataService.activeDoctorData);
+
         if (!isDataDiffer) {
             dispatch({ type: 'SET_ACTIVE_DOCTOR', data: activeData });
         }
-    }, []);
+    }, [activeData, dataService.activeDoctorData, dispatch, navigate]);
+
+    useEffect(() => {
+        if (activeData?.WorkDays) {
+            setBreakDays(activeData.WorkDays.map(normalizeDay));
+        }
+    }, [activeData]);
+
+    if (!activeData) {
+        return null;
+    }
 
     const onBackIconClick = (): void => {
         navigate('/doctors');
-    }
+    };
 
     const onDoctorDelete = (): void => {
-        deleteConfirmationDialogObj.current.show();
-    }
+        setIsDeleteOpen(true);
+    };
 
     const onDeleteClick = (): void => {
-        const filteredData: Record<string, any>[] = doctorData.filter((item: Record<string, any>) =>
-            item['Id'] !== parseInt(activeData['Id'] as string, 10));
-        doctorData = filteredData;
-        activeData = doctorData[0];
-        dispatch({ type: 'SET_ACTIVE_DOCTOR', data: activeData });
-        dispatch({ type: 'SET_DOCTORS_DATA', data: doctorData });
-        deleteConfirmationDialogObj.current.hide();
-        if (activeData) {
-            navigate('/doctor-details/' + activeData['Id']);
-            setBreakDays(activeData['WorkDays']);
+        const filteredData: Record<string, any>[] = doctorData.filter(
+            (item: Record<string, any>) => item['Id'] !== activeData['Id']
+        );
+
+        dispatch({ type: 'SET_DOCTORS_DATA', data: filteredData });
+        setIsDeleteOpen(false);
+
+        if (filteredData.length > 0) {
+            const nextDoctor = filteredData[0];
+            dispatch({ type: 'SET_ACTIVE_DOCTOR', data: nextDoctor });
+            navigate('/doctor-details/' + nextDoctor['Id']);
+            setBreakDays(nextDoctor['WorkDays'] ? nextDoctor['WorkDays'].map(normalizeDay) : []);
         } else {
             navigate('/doctors');
         }
-    }
+    };
 
     const onDeleteCancelClick = (): void => {
-        deleteConfirmationDialogObj.current.hide();
-    }
+        setIsDeleteOpen(false);
+    };
 
     const onDoctorEdit = (): void => {
-        addEditDoctorObj.current.showDetails();
-    }
+        addEditDoctorObj.current?.showDetails();
+    };
 
     const onAddBreak = (): void => {
-        breakHourObj.current.show();
-    }
+        setBreakDays(activeData.WorkDays ? activeData.WorkDays.map(normalizeDay) : []);
+        setIsBreakOpen(true);
+    };
 
     const getDayName = (day: string): string => {
         return day.split('')[0].toUpperCase();
-    }
+    };
 
     const getWorkDayName = (day: string): string => {
         return day.charAt(0).toUpperCase() + day.slice(1);
-    }
+    };
 
     const onCancelClick = (): void => {
-        setBreakDays(dataService.activeDoctorData['WorkDays'] as Record<string, any>[]);
-        breakHourObj.current.hide();
-    }
+        setBreakDays(activeData.WorkDays ? activeData.WorkDays.map(normalizeDay) : []);
+        setIsBreakOpen(false);
+    };
 
-    const onSaveClick = (): void => {
-        const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.break-hour-dialog .e-field'));
-        const workDays: Record<string, any>[] = JSON.parse(JSON.stringify(breakDays));
-        for (const curElement of formElement) {
-            const dayName: string = curElement.firstElementChild.getAttribute('id').split('_')[0];
-            const valueName: string = curElement.firstElementChild.getAttribute('id').split('_')[1];
-            const instance: TimePicker = (curElement.firstElementChild as EJ2Instance).ej2_instances[0] as TimePicker;
-            for (const workDay of workDays) {
-                if (workDay['Day'] === dayName) {
-                    if (valueName === 'start') {
-                        workDay['BreakStartHour'] = instance.value;
-                        workDay['WorkStartHour'] = new Date(workDay['WorkStartHour'] as Date);
-                    } else {
-                        workDay['BreakEndHour'] = instance.value;
-                        workDay['WorkEndHour'] = new Date(workDay['WorkEndHour'] as Date);
-                    }
-                }
-                workDay['Enable'] = !(workDay['State'] === 'TimeOff');
+    const onBreakStartChange = (dayName: string, value: Date | null): void => {
+        const days = extend([], breakDays, undefined, true) as Record<string, any>[];
+        for (const day of days) {
+            if (day['Day'] === dayName) {
+                day['BreakStartHour'] = value;
+                break;
             }
         }
+        setBreakDays(days);
+    };
+
+    const onBreakEndChange = (dayName: string, value: Date | null): void => {
+        const days = extend([], breakDays, undefined, true) as Record<string, any>[];
+        for (const day of days) {
+            if (day['Day'] === dayName) {
+                day['BreakEndHour'] = value;
+                break;
+            }
+        }
+        setBreakDays(days);
+    };
+
+    const onSaveClick = (): void => {
+        const workDays: Record<string, any>[] = breakDays.map(normalizeDay);
+
         const availableDays: Array<number> = [];
         workDays.forEach(workDay => {
+            workDay['Enable'] = !(workDay['State'] === 'TimeOff');
             if (workDay['Enable']) {
                 availableDays.push(workDay['Index']);
             }
         });
-        activeData['AvailableDays'] = availableDays.length === 0 ? [activeData['AvailableDays'][0]] : availableDays;
+
+        const updatedAvailableDays =
+            availableDays.length === 0 ? [activeData['AvailableDays'][0]] : availableDays;
+
         if (availableDays.length === 0) {
-            workDays[activeData['AvailableDays'][0]]['Enable'] = true;
-            workDays[activeData['AvailableDays'][0]]['State'] = 'AddBreak';
+            const firstIndex = activeData['AvailableDays'][0];
+            if (workDays[firstIndex]) {
+                workDays[firstIndex]['Enable'] = true;
+                workDays[firstIndex]['State'] = 'AddBreak';
+            }
         }
-        activeData['WorkDays'] = workDays;
+
+        const updatedDoctor = {
+            ...activeData,
+            AvailableDays: updatedAvailableDays,
+            WorkDays: workDays
+        };
+
+        dispatch({
+            type: 'SET_ACTIVE_DOCTOR',
+            data: updatedDoctor
+        });
+
+        dispatch({
+            type: 'UPDATE_DOCTOR_DATA',
+            data: updatedDoctor,
+            property: 'WorkDays',
+            propertyValue: workDays
+        });
+
         setBreakDays(workDays);
-        dispatch({ type: 'SET_ACTIVE_DOCTOR', data: activeData, property: 'WorkDays', propertyValue: workDays });
-        breakHourObj.current.hide();
-    }
+        setIsBreakOpen(false);
+    };
 
     const getStatus = (state: string): boolean => {
-        return state === 'RemoveBreak' ? false : true;
-    }
+        return state !== 'RemoveBreak';
+    };
 
     const onChangeStatus = (args: Record<string, any>): void => {
         args['preventDefault']();
         const activeState: string = args['target'].getAttribute('data-state');
         const activeDay: string = args['target'].getAttribute('id').split('_')[0];
         let newState = '';
+
         switch (activeState) {
             case 'TimeOff':
                 newState = 'RemoveBreak';
@@ -141,14 +212,15 @@ export const DoctorDetails = () => {
                 newState = 'TimeOff';
                 break;
         }
-        const days: Record<string, any>[] = extend([], breakDays, null, true) as Record<string, any>[];
+
+        const days: Record<string, any>[] = extend([], breakDays, undefined, true) as Record<string, any>[];
         for (const breakDay of days) {
             if (breakDay['Day'] === activeDay) {
                 breakDay['State'] = newState;
             }
         }
         setBreakDays(days);
-    }
+    };
 
     const getBreakDetails = (data: Record<string, any>): string => {
         if (data['State'] === 'TimeOff') {
@@ -156,71 +228,85 @@ export const DoctorDetails = () => {
         } else if (data['State'] === 'RemoveBreak') {
             return '---';
         } else {
-            // eslint-disable-next-line max-len
-            return `${intl.formatDate(data['BreakStartHour'], { skeleton: 'hm' })} - ${intl.formatDate(data['BreakEndHour'], { skeleton: 'hm' })}`;
+            const start = data['BreakStartHour'] ? new Date(data['BreakStartHour']) : null;
+            const end = data['BreakEndHour'] ? new Date(data['BreakEndHour']) : null;
+
+            if (!start || isNaN(start.getTime()) || !end || isNaN(end.getTime())) {
+                return '---';
+            }
+
+            return `${intl.formatDate(start, { skeleton: 'hm' })} - ${intl.formatDate(end, { skeleton: 'hm' })}`;
         }
-    }
+    };
 
     const getAvailability = (data: Record<string, any>): string => {
         const workDays: Record<string, any>[] = data['WorkDays'] as Record<string, any>[];
-        const filteredData: Record<string, any>[] = workDays.filter((item: any) => item.Enable !== false);
+        const normalizedWorkDays = workDays.map(normalizeDay);
+        const filteredData: Record<string, any>[] = normalizedWorkDays.filter((item: any) => item.Enable !== false);
+
+        if (filteredData.length === 0) {
+            return '';
+        }
+
         const result = filteredData.map(item => item['Day'].slice(0, 3).toLocaleUpperCase()).join(',');
-        // eslint-disable-next-line max-len
-        return `${result} - ${intl.formatDate(new Date(filteredData[0]['WorkStartHour']), { skeleton: 'hm' })} - ${intl.formatDate(new Date(filteredData[0]['WorkEndHour']), { skeleton: 'hm' })}`;
-    }
+        return `${result} - ${intl.formatDate(filteredData[0]['WorkStartHour'], { skeleton: 'hm' })} - ${intl.formatDate(filteredData[0]['WorkEndHour'], { skeleton: 'hm' })}`;
+    };
 
     const getSpecializationText = (text: Record<string, any>): string => {
-        return specializationData.filter((item: Record<string, any>) => item['Id'] === text)[0]['Text'] as string;
-    }
+        const match = specializationData.find((item: Record<string, any>) => item['Id'] === text);
+        return match ? (match['Text'] as string) : '';
+    };
 
     const getEducation = (text: string): string => {
         return text.toUpperCase();
-    }
+    };
 
     const refreshDetails = (): void => {
-        activeData = dataService.activeDoctorData;
-    }
+        // handled by context updates
+    };
 
     const breakHoursFooter = (): JSX.Element => {
         return (
             <div className="button-container">
-                <ButtonComponent cssClass="e-normal" onClick={onCancelClick.bind(this)}>Cancel</ButtonComponent>
-                <ButtonComponent cssClass="e-normal" isPrimary={true} onClick={onSaveClick.bind(this)}>Save</ButtonComponent>
+                <Button className="e-normal" onClick={onCancelClick}>Cancel</Button>
+                <Button className="e-normal" onClick={onSaveClick}>Save</Button>
             </div>
         );
-    }
+    };
 
     const confirmationFooter = (): JSX.Element => {
         return (
             <div className="button-container">
-                <ButtonComponent cssClass="e-normal" isPrimary={true} onClick={onDeleteClick.bind(this)}>Ok</ButtonComponent>
-                <ButtonComponent cssClass="e-normal" onClick={onDeleteCancelClick.bind(this)}>Cancel</ButtonComponent>
+                <Button className="e-normal" onClick={onDeleteClick}>Ok</Button>
+                <Button className="e-normal" onClick={onDeleteCancelClick}>Cancel</Button>
             </div>
         );
-    }
+    };
 
     return (
         <>
             <div className="doctor-details-container">
                 <header>
                     <div className="detail-header-title">
-                        <span className="back-icon icon-previous" onClick={onBackIconClick.bind(this)}></span>
+                        <span className="back-icon icon-previous" onClick={onBackIconClick}></span>
                         <div className="module-title">
                             <div className='title'>DOCTOR DETAILS</div>
                             <div className='underline'></div>
                         </div>
                     </div>
                     <div className='doctor-detail'>
-                        <ButtonComponent cssClass="e-small delete-details" onClick={onDoctorDelete.bind(this)}>Delete</ButtonComponent>
-                        <ButtonComponent cssClass="e-small edit-details" onClick={onDoctorEdit.bind(this)}>Edit</ButtonComponent>
+                        <Button className=" delete-details" size={Size.Small} color={Color.Error} onClick={onDoctorDelete}>Delete</Button>
+                        <Button className=" edit-details" size={Size.Small} color={Color.Primary} onClick={onDoctorEdit}>Edit</Button>
                     </div>
                 </header>
+
                 <div className="active-doctor">
                     <div className="active-doctor-image">
                         <img className="value" src={loadImage(activeData['Text'])} alt="doctor" />
                         <span className={"availability " + activeData['Availability']}></span>
                         <span className={"upload icon-upload_photo " + activeData['NewDoctorClass']}></span>
                     </div>
+
                     <div className="active-doctor-info">
                         <div className="basic-detail info-field-container">
                             <div className="name">Dr. {activeData['Name']}</div>
@@ -244,35 +330,40 @@ export const DoctorDetails = () => {
                             <div className="mobile">{activeData['Mobile']}</div>
                         </div>
                     </div>
+
                     <div className="work-days-container">
                         <header>
                             <div className="title-text">Break Hours</div>
-                            <div className="add-container" onClick={onAddBreak.bind(this)}>
-                                <ButtonComponent cssClass="e-small e-round" iconCss="e-icons e-add-icon" isPrimary={true}></ButtonComponent>
+                            <div className="add-container" onClick={onAddBreak}>
+                                <Button icon={<PlusIcon />} size={Size.Small}></Button>
                                 <span className="button-label">Add</span>
                             </div>
                         </header>
                         <div className="work-days-content">
-                            <>
-                                {
-                                    activeData && activeData['WorkDays'].map((data: Record<string, any>, index: number) => {
-                                        return (
-                                            <div className='work-day-item' key={index}>
-                                                <div className="day-name">{getWorkDayName(data.Day)}</div>
-                                                <div className={"day-break-hours " + data.State}>{getBreakDetails(data)}</div>
-                                            </div>
-                                        )
-                                    })
-                                }
-                            </>
+                            {breakDays.map((day: Record<string, any>, index: number) => (
+                                <div className='work-day-item' key={index}>
+                                    <div className="day-name">{getWorkDayName(day.Day)}</div>
+                                    <div className={"day-break-hours " + day.State}>{getBreakDetails(day)}</div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
+
             <div className="break-hours-container" style={{ display: 'none' }}>
-                <DialogComponent ref={breakHourObj} width='445px' cssClass='break-hour-dialog' isModal={true} visible={false}
-                    animationSettings={animationSettings} header='Break Hours' showCloseIcon={true} target='#content-area'
-                    footerTemplate={breakHoursFooter.bind(this)}>
+                <Dialog
+                    ref={breakHourObj}
+                    open={isBreakOpen}
+                    style={{ width: '445px' }}
+                    className='break-hour-dialog'
+                    modal={true}
+                    header='Break Hours'
+                    closeIcon={true}
+                    onClose={() => setIsBreakOpen(false)}
+                    footer={breakHoursFooter()}
+                    target={dialogTarget ?? undefined}
+                >
                     <div>
                         <div className="break-hour-operations">
                             * Click on day to add break, double click to take time off and third click to remove break
@@ -282,42 +373,68 @@ export const DoctorDetails = () => {
                             <div>Start Time</div>
                             <div>End Time</div>
                         </div>
-                        {
-                            breakDays && breakDays.map((day: Record<string, any>, index: number) => {
-                                return (
-                                    <div className='break-hour-days' key={index}>
-                                        <div className={"day-button " + day['State']}>
-                                            <ButtonComponent id={day['Day'] + "_button"} cssClass="e-small e-round" isPrimary={true}
-                                                onClick={onChangeStatus.bind(this)} data-state={day['State']}>{getDayName(day['Day'])}</ButtonComponent>
-                                        </div>
-                                        <div className={"start-container " + day['State']}>
-                                            <TimePickerComponent cssClass="e-field" id={day['Day'] + "_start"} enabled={getStatus(day['State'])}
-                                                value={day['BreakStartHour']} showClearButton={false}></TimePickerComponent>
-                                        </div>
-                                        <div className={"end-container " + day['State']}>
-                                            <TimePickerComponent cssClass='e-field' id={day['Day'] + "_end"} enabled={getStatus(day['State'])}
-                                                value={day['BreakEndHour']} showClearButton={false}></TimePickerComponent>
-                                        </div>
-                                        <div className={"state-container " + day['State']}>
-                                            <div>Time Off</div>
-                                        </div>
-                                    </div>
-                                )
-                            })
-                        }
+                        {breakDays.map((day: Record<string, any>, index: number) => (
+                            <div className='break-hour-days' key={index}>
+                                <div className={"day-button " + day['State']}>
+                                    <Button
+                                        id={day['Day'] + "_button"}
+                                        className=" e-round"
+                                        onClick={onChangeStatus}
+                                        data-state={day['State']}
+                                        size={Size.Small}
+                                    >
+                                        {getDayName(day['Day'])}
+                                    </Button>
+                                </div>
+                                <div className={"start-container " + day['State']}>
+                                    <TimePicker
+                                        className="e-field"
+                                        id={day['Day'] + "_start"}
+                                        disabled={!getStatus(day['State'])}
+                                        value={day['BreakStartHour']}
+                                        clearButton={false}
+                                        onChange={(e: any) => onBreakStartChange(day['Day'], e.value)}
+                                    />
+                                </div>
+                                <div className={"end-container " + day['State']}>
+                                    <TimePicker
+                                        className='e-field'
+                                        id={day['Day'] + "_end"}
+                                        disabled={!getStatus(day['State'])}
+                                        value={day['BreakEndHour']}
+                                        clearButton={false}
+                                        onChange={(e: any) => onBreakEndChange(day['Day'], e.value)}
+                                    />
+                                </div>
+                                <div className={"state-container " + day['State']}>
+                                    <div>Time Off</div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </DialogComponent>
+                </Dialog>
             </div>
-            <AddEditDoctor ref={addEditDoctorObj} refreshDoctors={refreshDetails.bind(this)} />
+
+            <AddEditDoctor ref={addEditDoctorObj} refreshDoctors={refreshDetails} />
+
             <div className="delete-confirmation-container" style={{ display: 'none' }}>
-                <DialogComponent ref={deleteConfirmationDialogObj} width='445px' cssClass='break-hour-dialog' isModal={true} visible={false}
-                    animationSettings={animationSettings} header='Doctor Details' showCloseIcon={true} target='#content-area'
-                    footerTemplate={confirmationFooter.bind(this)}>
+                <Dialog
+                    ref={deleteConfirmationDialogObj}
+                    open={isDeleteOpen}
+                    style={{ width: '445px' }}
+                    className='break-hour-dialog'
+                    modal={true}
+                    header='Doctor Details'
+                    closeIcon={true}
+                    onClose={() => setIsBreakOpen(false)}
+                    target={dialogTarget ?? undefined}
+                    footer={confirmationFooter()}
+                >
                     <form>
                         <div>Are you sure you want to delete this doctor?</div>
                     </form>
-                </DialogComponent>
+                </Dialog>
             </div>
         </>
-    )
-}
+    );
+};

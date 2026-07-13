@@ -14,6 +14,7 @@ import {
 import { DropDownListComponent, ComboBox } from '@syncfusion/ej2-react-dropdowns';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { AddEditPatient } from '../AddEditPatient/AddEditPatient';
+import { TreeWaitingList } from './TreeWaitingList/TreeWaitingList';
 import { DialogWaitingList } from './DialogWaitingList/DialogWaitingList';
 import { CalendarSettings } from '../../models/calendar-settings';
 import { CalendarData } from '../../models/calendar-data';
@@ -59,7 +60,6 @@ const Calendar = () => {
     }
     const eventSettings = useRef({
     dataSource: eventData.current as Record<string, any>[],
-    // query: new Query(),
     fields: {
         subject: 'Name',
         startTime: 'StartTime',
@@ -79,6 +79,8 @@ const Calendar = () => {
     const timeScale = { interval: calendarSettings.interval };
     const currentView = calendarSettings.currentView;
     const [selectedDate, setSelectedDate] = useState(dataService.selectedDate);
+    const [selectedDoctor, setSelectedDoctor] = useState<Record<string, any> | null>(null);
+    const [schedulerEvents, setSchedulerEvents] = useState<Record<string, any>[]>(dataService.hospitalData);
     const currentDate = useRef(selectedDate);
     const toastWidth = isDevice ? '300px' : '580px';
 
@@ -178,6 +180,7 @@ const Calendar = () => {
                 }
             }
             dispatch({ type: 'SET_HOSPITAL_DATA', data: hospitalData.current });
+            treeObj.current.updateActiveWaitingList();
         }
     }
 
@@ -238,17 +241,11 @@ const Calendar = () => {
     const onEventRendered = (args: Record<string, any>): void => {
         if (args['element'].classList.contains('e-appointment')) {
             const data: Record<string, any> = args['data'] as Record<string, any>;
-            const eventStart = data['StartTime'] as Date;
-            const eventEnd = data['EndTime'] as Date;
-            let eventCollection = scheduleObj.current.blockProcessed;
-            eventCollection = scheduleObj.current.eventBase.filterEvents(eventStart, eventEnd, eventCollection);
-            if (eventCollection.length > 0) {
-                args['cancel'] = true;
-                return;
-            }
+            const subject = (data['Name'] || '').toString().toLowerCase();
+
             args['element'].style.color = '#fff';
         }
-    }
+    };
 
     const onAddPatient = (): void => {
         addEditPatientObj.current.onAddPatient();
@@ -275,25 +272,43 @@ const Calendar = () => {
         if (args['value']) {
             refreshDataSource(args['itemData'].DepartmentId, args['itemData'].Id);
         } else {
-            setDefaultData();
+            setSelectedDoctor(null);
+            setSchedulerEvents(hospitalData.current);
+            activeDoctorData.current = [];
+            setWorkDays([0, 1, 2, 3, 4, 5, 6]);
+            setWorkHours({ start: '08:00', end: '21:00' });
+            setSelectedDate(dataService.selectedDate);
+            if (treeObj.current) {
+                treeObj.current.updateActiveWaitingList(null);
+            }
         }
-    }
+    };
 
     const refreshDataSource = (deptId: string, doctorId: string): void => {
         const filteredItems: Record<string, any>[] = doctorsData.filter(item => parseInt(doctorId, 10) === item['Id']);
-        activeDoctorData.current = filteredItems;
-        if (filteredItems.length > 0) {
-            updateBreakHours(scheduleObj.current.selectedDate);
-            eventData.current = generateEvents(activeDoctorData.current[0]);
+        const selectedDoctorData = filteredItems.length > 0 ? filteredItems[0] : null;
+
+        setSelectedDoctor(selectedDoctorData);
+        activeDoctorData.current = selectedDoctorData ? [selectedDoctorData] : [];
+
+        if (selectedDoctorData) {
+            const baseDate = currentDate.current || selectedDate;
+            updateBreakHours(baseDate);
+            const generatedEvents = generateEvents(selectedDoctorData);
+            eventData.current = generatedEvents;
+            setSchedulerEvents(generatedEvents);
+            setWorkDays(selectedDoctorData['AvailableDays']);
+            setWorkHours({ start: selectedDoctorData['StartHour'], end: selectedDoctorData['EndHour'] });
         } else {
             eventData.current = hospitalData.current;
+            setSchedulerEvents(hospitalData.current);
+            setWorkDays([0, 1, 2, 3, 4, 5, 6]);
+            setWorkHours({ start: '08:00', end: '21:00' });
         }
-        scheduleObj.current.resources[0].query = new Query().where('DepartmentId', 'equal', parseInt(deptId, 10));
-        scheduleObj.current.resources[1].query = new Query().where('Id', 'equal', parseInt(doctorId, 10));
-        scheduleObj.current.eventSettings.dataSource = eventData.current;
-        setWorkDays(filteredItems[0]['AvailableDays']);
-        setWorkHours({ start: filteredItems[0]['StartHour'], end: filteredItems[0]['EndHour'] });
-        treeObj.current.updateWaitingList(parseInt(deptId, 10), null);
+
+        if (treeObj.current) {
+            treeObj.current.updateWaitingList(parseInt(deptId, 10), parseInt(doctorId, 10), null);
+        }
     }
 
     const onAddClick = (): void => {
@@ -334,7 +349,9 @@ const Calendar = () => {
     }
 
     const onWaitingListSelect = (): void => {
-        waitingObj.current.show();
+        if (waitingObj.current) {
+            waitingObj.current.show();
+        }
     }
 
     const getCalendarData = (): CalendarData => {
@@ -346,15 +363,27 @@ const Calendar = () => {
 
     const updateEventData = (data: Record<string, any>[]): void => {
         eventData.current = data;
+        setSchedulerEvents(data);
     }
 
     const setTreeItemDrop = (): void => {
         isTreeItemDropped.current = true;
     }
 
+    const updateActiveWaitingList = (currentWaitingList?: Record<string, any>[]) => {
+        const activeDoctorData: Record<string, any>[] = getCalendarData().activeDoctorData;
+        if (activeDoctorData.length > 0) {
+            treeObj.current.updateWaitingList(activeDoctorData[0]['DepartmentId'], activeDoctorData[0]['Id'], currentWaitingList);
+        } else {
+            treeObj.current.updateWaitingList(null, null, currentWaitingList);
+        }
+    }
+
     const getDateHeaderText: Function = (value: Date): string => instance.formatDate(value, { skeleton: 'MMMEd' }).toUpperCase();
 
     const getBackGroundColor = (data: Record<string, any>): Record<string, string> => {
+        const subject = (data['Name'] || '').toString().toLowerCase();
+
         let color: string;
         if (calendarSettings.bookingColor === 'Doctors' && !isNullOrUndefined(data['DoctorId'])) {
             color = doctorsData.filter((item: Record<string, any>) => item['Id'] === data['DoctorId'])[0]['Color'] as string || '#7575ff';
@@ -374,34 +403,37 @@ const Calendar = () => {
             updateBreakHours(currentDate.current);
             eventData.current = generateEvents(activeDoctorData.current[0]);
             scheduleObj.current.eventSettings.dataSource = eventData.current;
-            treeObj.current.updateWaitingList(activeDoctorData.current[0]['DepartmentId'], null);
+            treeObj.current.updateWaitingList(activeDoctorData.current[0]['DepartmentId'], activeDoctorData.current[0]['Id'], null);
         } else {
-            treeObj.current.updateWaitingList();
+            treeObj.current.updateActiveWaitingList();
         }
     }
 
     const updateBreakHours = (currentDate: Date): void => {
-        const currentViewDates: Date[] = [];
-        let startDate: Date =  new Date();
-        const endDate: Date = new Date('07/13/2026');
-        do {
-            currentViewDates.push(startDate);
-        } while (startDate.getTime() !== endDate.getTime());
-        currentViewDates.forEach((item: Date) => {
-            activeDoctorData.current[0]['WorkDays'].forEach((dayItem: { [key: string]: Date }) => {
-                if (dayItem['BreakStartHour'].getDay() === item.getDay()) {
-                    dayItem['BreakStartHour'] = resetDateValue(dayItem['BreakStartHour'], item);
-                    dayItem['BreakEndHour'] = resetDateValue(dayItem['BreakEndHour'], item);
-                    dayItem['WorkStartHour'] = resetDateValue(dayItem['WorkStartHour'], item);
-                    dayItem['WorkEndHour'] = resetDateValue(dayItem['WorkEndHour'], item);
-                }
-            });
+        if (!activeDoctorData.current || activeDoctorData.current.length === 0) {
+            return;
+        }
+
+        const activeDoctor = activeDoctorData.current[0];
+        const workDays = Array.isArray(activeDoctor.WorkDays) ? activeDoctor.WorkDays : [];
+
+        activeDoctor.WorkDays = workDays.map((dayItem: Record<string, any>) => {
+            return {
+                ...dayItem,
+                WorkStartHour: resetDateValue(new Date(dayItem.WorkStartHour), currentDate),
+                WorkEndHour: resetDateValue(new Date(dayItem.WorkEndHour), currentDate),
+                BreakStartHour: resetDateValue(new Date(dayItem.BreakStartHour), currentDate),
+                BreakEndHour: resetDateValue(new Date(dayItem.BreakEndHour), currentDate)
+            };
         });
-    }
+    };
 
     const resetDateValue = (date: Date, item: Date): Date => {
-        return new Date(new Date(date).setFullYear(item.getFullYear(), item.getMonth(), item.getDate()));
-    }
+        const cloned = new Date(date);
+        return new Date(
+            cloned.setFullYear(item.getFullYear(), item.getMonth(), item.getDate())
+        );
+    };
 
     const generateEvents = (activeData: Record<string, any>): Record<string, any>[] => {
         const filteredEvents: Record<string, any>[] = [];
@@ -480,7 +512,7 @@ const Calendar = () => {
         eventData.current = hospitalData.current;
         scheduleObj.current.eventSettings.dataSource = eventData.current;
         scheduleObj.current.refreshEvents();
-        treeObj.current.updateWaitingList();
+        treeObj.current.updateActiveWaitingList();
         setWorkDays([0, 1, 2, 3, 4, 5, 6]);
         setWorkHours({ start: '08:00', end: '21:00' });
         activeDoctorData.current = [];
@@ -619,7 +651,7 @@ const Calendar = () => {
                             workDays={workDays} 
                             workHours={workHours} 
                             defaultView={currentView}
-                            firstDayOfWeek={1}
+                            firstDayOfWeek={0}
                             resources={[
                                 {
                                     name: 'Departments',
@@ -641,7 +673,10 @@ const Calendar = () => {
                                     dataSource: resourceDataSource
                                 }
                             ]}
-                            eventSettings={eventSettings.current}
+                            eventSettings={{
+                                ...eventSettings.current,
+                                dataSource: schedulerEvents
+                            }}
                             dateHeader={dateHeaderTemplate}
                         >
                             <DayView />
@@ -665,7 +700,7 @@ const Calendar = () => {
                         </div>
                         <ToastComponent ref={toastObj} position={position} width={toastWidth} height='70px' showCloseButton={true}>
                         </ToastComponent>
-                        
+                        <TreeWaitingList ref={treeObj} getCalendarData={getCalendarData} setTreeItemDrop={setTreeItemDrop} />
                     </div>
                 </div >
             </div >

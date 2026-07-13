@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState, useRef } from 'react';
-import { ListViewComponent } from '@syncfusion/ej2-react-lists';
+import { ListView } from '@syncfusion/react-lists';
 import { useActivity } from '../../context/ActivityContext';
 import './RecentActivity.scss';
 
@@ -66,9 +66,9 @@ export const RecentActivity = () => {
     return (
         <>
             <h3>Recent Activities</h3>
-            <ListViewComponent id='listview_template' height='88%' width='100%' dataSource={dataSource} cssClass='activity-template'
-                showHeader={false} template={listTemplate.bind(this)}>
-            </ListViewComponent>
+            <ListView id='listview_template' style={{height:'88%', width:'100%'}} dataSource={dataSource} className='activity-template'
+                itemTemplate={listTemplate.bind(this)}>
+            </ListView>
         </>
     )
 }

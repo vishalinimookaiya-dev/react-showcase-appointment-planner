@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useRef, forwardRef, useImperativeHandle, MutableRefObject } from 'react';
+import { useRef, forwardRef, useImperativeHandle, MutableRefObject, useState } from 'react';
 import { isNullOrUndefined } from '@syncfusion/ej2-base';
-import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
-import { FormValidator, TextBoxComponent, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
+import { Button, Color } from '@syncfusion/react-buttons';
+import { FormValidator, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
+import { TextBox } from '@syncfusion/react-inputs';
 import { EJ2Instance } from '@syncfusion/ej2-react-schedule';
-import { DialogComponent, BeforeOpenEventArgs } from '@syncfusion/ej2-react-popups';
-import { DropDownList, DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { Dialog } from '@syncfusion/react-popups';
+import { DropDownList } from '@syncfusion/react-dropdowns';
 import { specializationData as specializationList, experienceData as experienceList, dutyTimingsData as dutyTimingsList } from '../../datasource';
 import { useData, useDataDispatch } from '../../context/DataContext';
 import { useActivityDispatch } from '../../context/ActivityContext';
@@ -14,19 +15,19 @@ import './AddEditDoctor.scss';
 
 interface AddEditDoctorProps {
     refreshDoctors?: () => void;
-    calendarDropDownObj?: MutableRefObject<DropDownListComponent>;
+    calendarDropDownObj?: MutableRefObject<any>;
 }
 
 export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }: AddEditDoctorProps, ref) => {
     const dataService = useData();
     const dispatch = useDataDispatch();
     const activityDispatch = useActivityDispatch();
-    const newDoctorObj = useRef<DialogComponent>(null);
+    const newDoctorObj = useRef<any>(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     let doctorsData: Record<string, any>[] = dataService.doctorsData;
     let activeDoctorData: Record<string, any> = dataService.activeDoctorData;
     let dialogState: string;
-    let animationSettings: Record<string, any> = { effect: 'None' };
     let title = 'New Doctor';
     let specializationData: Record<string, any>[] = specializationList;
     let fields: Record<string, any> = { text: 'Text', value: 'Id' };
@@ -45,12 +46,14 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
     const onAddDoctor = (): void => {
         dialogState = 'new';
         title = 'New Doctor';
+        setIsOpen(true);
         newDoctorObj.current.show();
-    }
+    };
 
     const onCancelClick = (): void => {
+        setIsOpen(false);
         newDoctorObj.current.hide();
-    }
+    };
 
     const onSaveClick = (): void => {
         const formElementContainer: HTMLElement = document.querySelector('.new-doctor-dialog #new-doctor-form');
@@ -58,18 +61,21 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             !((formElementContainer as EJ2Instance).ej2_instances[0] as FormValidator).validate()) {
             return;
         }
+
         let obj: Record<string, any> = dialogState === 'new' ? {} : activeDoctorData;
         const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
+
         for (const curElement of formElement) {
             const inputElement: HTMLInputElement = curElement.querySelector('input');
             let columnName: string = inputElement.name;
             const isCustomElement: boolean = curElement.classList.contains('e-ddl');
+
             if (!isNullOrUndefined(columnName) || isCustomElement) {
                 if (columnName === '' && isCustomElement) {
                     columnName = curElement.querySelector('select').name;
-                    const instance: DropDownList = ((inputElement as Element) as EJ2Instance).ej2_instances[0] as DropDownList;
+                    const instance: any = ((inputElement as Element) as EJ2Instance).ej2_instances[0];
                     obj[columnName] = instance.value;
-                    let value: string = instance.value as string;
+                    const value: string = instance.value as string;
                     if (columnName === 'Specialization') {
                         obj['DepartmentId'] = (instance.getDataByValue(value) as Record<string, any>)['DepartmentId'];
                     }
@@ -80,6 +86,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                 }
             }
         }
+
         if (dialogState === 'new') {
             obj['Id'] = doctorsData.length > 0 ? Math.max.apply(Math, doctorsData.map((data: Record<string, any>) => data['Id'])) + 1 : 1;
             obj['Text'] = 'default';
@@ -96,6 +103,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             activeDoctorData = updateWorkHours(obj);
             dispatch({ type: 'SET_ACTIVE_DOCTOR', data: activeDoctorData });
         }
+
         const activityObj: Record<string, any> = {
             Name: dialogState === 'new' ? 'Added New Doctor' : 'Updated Doctor',
             Message: `Dr.${obj['Name']}, ${obj['Specialization'].charAt(0).toUpperCase() + obj['Specialization'].slice(1)}`,
@@ -103,16 +111,21 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             Type: 'doctor',
             ActivityTime: new Date()
         };
+
         activityDispatch({ type: 'SET_ACTIVITY_DATA', data: activityObj });
+
         if (refreshDoctors) {
             refreshDoctors();
         }
+
         if (!isNullOrUndefined(calendarDropDownObj) && !isNullOrUndefined(calendarDropDownObj.current)) {
             calendarDropDownObj.current.dataSource = [];
             calendarDropDownObj.current.dataSource = doctorsData;
         }
+
+        setIsOpen(false);
         newDoctorObj.current.hide();
-    }
+    };
 
     const updateWorkHours = (data: Record<string, any>): Record<string, any> => {
         const dutyString: string = dutyTimingsData.filter((item: Record<string, any>) => item['Id'] === data['DutyTiming'])[0]['Text'];
@@ -120,6 +133,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
         let endHour: string;
         let startValue: number;
         let endValue: number;
+
         if (dutyString === '10:00 AM - 7:00 PM') {
             startValue = 10;
             endValue = 19;
@@ -136,29 +150,33 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             startHour = '12:00';
             endHour = '21:00';
         }
+
         data['WorkDays'].forEach((item: Record<string, any>) => {
             item['WorkStartHour'] = new Date(new Date(item['WorkStartHour']).setHours(startValue));
             item['WorkEndHour'] = new Date(new Date(item['WorkEndHour']).setHours(endValue));
             item['BreakStartHour'] = new Date(item['BreakStartHour']);
             item['BreakEndHour'] = new Date(item['BreakEndHour']);
         });
+
         data['StartHour'] = startHour;
         data['EndHour'] = endHour;
         return data;
-    }
+    };
 
     const resetFormFields = (): void => {
         const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
         destroyErrorElement(document.querySelector('#new-doctor-form'), formElement);
+
         for (const curElement of formElement) {
             const inputElement: HTMLInputElement = curElement.querySelector('input');
             let columnName: string = inputElement.name;
             const isCustomElement: boolean = curElement.classList.contains('e-ddl');
+
             if (!isNullOrUndefined(columnName) || isCustomElement) {
                 if (columnName === '' && isCustomElement) {
                     columnName = curElement.querySelector('select').name;
-                    const instance: DropDownList = ((inputElement as Element) as EJ2Instance).ej2_instances[0] as DropDownList;
-                    instance.value = (instance as any).dataSource[0].Id;
+                    const instance: any = ((inputElement as Element) as EJ2Instance).ej2_instances[0];
+                    instance.value = instance.dataSource[0].Id;
                 } else if (columnName === 'Gender') {
                     inputElement.checked = true;
                 } else if (columnName === 'Mobile') {
@@ -168,23 +186,27 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                 }
             }
         }
-    }
+    };
 
     const showDetails = (): void => {
         dialogState = 'edit';
         title = 'Edit Doctor';
+        setIsOpen(true);
         newDoctorObj.current.show();
         activeDoctorData = dataService.activeDoctorData;
+
         const obj: Record<string, any> = activeDoctorData;
         const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
+
         for (const curElement of formElement) {
             const inputElement: HTMLInputElement = curElement.querySelector('input');
             let columnName: string = inputElement.name;
             const isCustomElement: boolean = curElement.classList.contains('e-ddl');
+
             if (!isNullOrUndefined(columnName) || isCustomElement) {
                 if (columnName === '' && isCustomElement) {
                     columnName = curElement.querySelector('select').name;
-                    const instance: DropDownList = ((inputElement as Element) as EJ2Instance).ej2_instances[0] as DropDownList;
+                    const instance: any = ((inputElement as Element) as EJ2Instance).ej2_instances[0];
                     instance.value = obj[columnName] as string;
                     instance.dataBind();
                 } else if (columnName === 'Gender') {
@@ -201,52 +223,63 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                 }
             }
         }
-    }
+    };
 
-    const onBeforeOpen = (args: BeforeOpenEventArgs): void => {
-        const formElement: HTMLFormElement = args.element.querySelector('#new-doctor-form');
+    const onBeforeOpen = (): void => {
+        const formElement: HTMLFormElement = newDoctorObj.current?.element.querySelector('#new-doctor-form');
         if (formElement && formElement['ej2_instances']) {
             return;
         }
+
         const customFn: (args: { [key: string]: HTMLElement }) => boolean = (e: { [key: string]: HTMLElement }) => {
             const argsLength = ((e['element'] as EJ2Instance).ej2_instances[0] as MaskedTextBoxComponent).value.length;
             return (argsLength !== 0) ? argsLength >= 10 : false;
         };
+
         const rules: Record<string, any> = {};
         rules['Name'] = { required: [true, 'Enter valid name'] };
         rules['Mobile'] = { required: [customFn, 'Enter valid mobile number'] };
         rules['Email'] = { required: [true, 'Enter valid email'], email: [true, 'Email address is invalid'] };
         rules['Education'] = { required: [true, 'Enter valid education'] };
+
         renderFormValidator(formElement, rules, newDoctorObj.current.element);
-    }
+    };
 
     const onBeforeClose = (): void => {
         resetFormFields();
-    }
+    };
 
-    const footerTemplate = (props: Record<string, any>): JSX.Element => {
+    const footerTemplate = (): JSX.Element => {
         return (
             <div className="button-container">
-                <ButtonComponent cssClass="e-normal" onClick={onCancelClick.bind(this)}>Cancel</ButtonComponent>
-                <ButtonComponent cssClass="e-normal" isPrimary={true} onClick={onSaveClick.bind(this)}>Save</ButtonComponent>
+                <Button className="e-normal" color={Color.Secondary} onClick={onCancelClick}>Cancel</Button>
+                <Button className="e-normal" color={Color.Primary} onClick={onSaveClick}>Save</Button>
             </div>
         );
-    }
+    };
 
     return (
         <div className="new-doctor-container" style={{ display: 'none' }}>
-            <DialogComponent ref={newDoctorObj} width='390px' cssClass='new-doctor-dialog' isModal={true} visible={false}
-                animationSettings={animationSettings} header={title} showCloseIcon={true} target='#content-area'
-                beforeOpen={onBeforeOpen.bind(this)} footerTemplate={footerTemplate.bind(this)} beforeClose={onBeforeClose.bind(this)}>
-                <form id='new-doctor-form'>
+            <Dialog
+                ref={newDoctorObj}
+                style={{ width: '390px' }}
+                className="new-doctor-dialog"
+                modal={true}
+                header={title}
+                closeIcon={true}
+                open={isOpen}
+                footer={footerTemplate()}
+                onClose={onBeforeClose}
+            >
+                <form id="new-doctor-form">
                     <div className="name-container">
-                        <TextBoxComponent id='Name' name='Name' cssClass='doctor-name e-field' placeholder='Doctor Name'
-                            floatLabelType='Always'></TextBoxComponent>
+                        <TextBox id="Name" name="Name" className="doctor-name e-field" placeholder="Doctor Name" />
                     </div>
+
                     <div className="gender-container">
                         <div className="gender">
                             <div><label>Gender</label></div>
-                            <div className='e-btn-group e-round-corner e-field'>
+                            <div className="e-btn-group e-round-corner e-field">
                                 <input type="radio" id="patientCheckMale" name="Gender" value="Male" defaultChecked />
                                 <label className="e-btn" htmlFor="patientCheckMale">Male</label>
                                 <input type="radio" id="patientCheckFemale" name="Gender" value="Female" />
@@ -254,42 +287,66 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             </div>
                         </div>
                         <div className="mobile">
-                            <MaskedTextBoxComponent id='DoctorMobile' name='Mobile' cssClass='e-field' width='180px' placeholder='Mobile Number'
-                                mask="(999) 999-9999" floatLabelType='Always'></MaskedTextBoxComponent>
+                            <MaskedTextBoxComponent
+                                id="DoctorMobile"
+                                name="Mobile"
+                                className="e-field"
+                                width="180px"
+                                placeholder="Mobile Number"
+                                mask="(999) 999-9999"
+                            />
                         </div>
                     </div>
+
                     <div className="email-container">
-                        <TextBoxComponent id='Email' name='Email' cssClass='e-field' placeholder='Email' floatLabelType='Always'>
-                        </TextBoxComponent>
+                        <TextBox id="Email" name="Email" className="e-field" placeholder="Email" />
                     </div>
+
                     <div className="education-container">
                         <div className="department">
-                            <DropDownListComponent id='Specialization' width='160px' cssClass='doctor-department e-field' index={0}
-                                placeholder='Department' floatLabelType='Always' dataSource={specializationData} fields={fields}>
-                            </DropDownListComponent>
+                            <DropDownList
+                                id="Specialization"
+                                width="160px"
+                                className="doctor-department e-field"
+                                placeholder="Department"
+                                dataSource={specializationData}
+                                fields={fields}
+                            />
                         </div>
                         <div className="education">
-                            <TextBoxComponent id='Education' name='Education' cssClass='e-field' width='180px' placeholder='Education'
-                                floatLabelType='Always'></TextBoxComponent>
+                            <TextBox id="Education" name="Education" className="e-field" width="180px" placeholder="Education" />
                         </div>
                     </div>
+
                     <div className="experience-container">
                         <div className="experience">
-                            <DropDownListComponent id='Experience' name='Experience' cssClass='e-field' width='160px'
-                                placeholder='Experience' index={0} floatLabelType='Always' dataSource={experienceData} fields={fields}>
-                            </DropDownListComponent>
+                            <DropDownList
+                                id="Experience"
+                                name="Experience"
+                                className="e-field"
+                                width="160px"
+                                placeholder="Experience"
+                                dataSource={experienceData}
+                                fields={fields}
+                            />
                         </div>
                         <div className="designation">
-                            <TextBoxComponent id='Designation' name='Designation' cssClass='e-field' width='180px' placeholder='Designation'
-                                floatLabelType='Always'></TextBoxComponent>
+                            <TextBox id="Designation" name="Designation" className="e-field" width="180px" placeholder="Designation" />
                         </div>
                     </div>
+
                     <div className="duty-container">
-                        <DropDownListComponent id="DutyTiming" cssClass='e-field' width='100%' placeholder='Duty Timing' index={0}
-                            floatLabelType='Always' dataSource={dutyTimingsData} fields={fields}></DropDownListComponent>
+                        <DropDownList
+                            id="DutyTiming"
+                            className="e-field"
+                            width="100%"
+                            placeholder="Duty Timing"
+                            dataSource={dutyTimingsData}
+                            fields={fields}
+                        />
                     </div>
                 </form>
-            </DialogComponent>
+            </Dialog>
         </div>
-    )
-})
+    );
+});
