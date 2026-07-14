@@ -3,15 +3,15 @@ import { useRef, useEffect, useCallback, memo, useState } from 'react';
 import {
     closest, Browser, Internationalization, extend, isNullOrUndefined, createElement
 } from '@syncfusion/ej2-base';
-import { Query, Predicate, DataManager } from '@syncfusion/ej2-data';
-import { ToastComponent } from '@syncfusion/ej2-react-notifications';
-import { Button, ButtonComponent } from '@syncfusion/ej2-react-buttons';
-import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { Query, Predicate, DataManager } from '@syncfusion/react-data';
+import { Toast } from '@syncfusion/react-notifications';
+import { Button } from '@syncfusion/react-buttons';
+import { Dialog } from '@syncfusion/react-popups';
 import { ItemModel } from '@syncfusion/ej2-react-navigations';
 import {
     Scheduler, DayView, WeekView, WorkWeekView, MonthView, AgendaView
 } from '@syncfusion/react-scheduler';
-import { DropDownListComponent, ComboBox } from '@syncfusion/ej2-react-dropdowns';
+import { DropDownList, ComboBox } from '@syncfusion/react-dropdowns';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { AddEditPatient } from '../AddEditPatient/AddEditPatient';
 import { TreeWaitingList } from './TreeWaitingList/TreeWaitingList';
@@ -31,11 +31,12 @@ const Calendar = () => {
     const addEditDoctorObj = useRef(null);
     const addEditPatientObj = useRef(null);
     const scheduleObj = useRef<any>(null);
-    const specialistObj = useRef<DialogComponent>(null);
-    const dropdownObj = useRef<DropDownListComponent>(null);
-    const toastObj = useRef<ToastComponent>(null);
+    const specialistObj = useRef<any>(null);
+    const dropdownObj = useRef<any>(null);
+    const toastObj = useRef<any>(null);
     const treeObj = useRef(null);
     const waitingObj = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     const isDevice: boolean = Browser.isDevice;
     const position: Record<string, any> = { X: 'Right', Y: 'Bottom' };
@@ -46,7 +47,7 @@ const Calendar = () => {
     const [workDays, setWorkDays] = useState([0, 1, 2, 3, 4, 5, 6]);
     const [workHours, setWorkHours] = useState({ start: '08:00', end: '21:00' });
     const animationSettings: Record<string, any> = { effect: 'None' };
-    const comboBox = useRef<ComboBox>(null);
+    const comboBox = useRef<any>(null);
     const fields: Record<string, any> = { text: 'Name', value: 'Id' };
     const eventData = useRef(dataService.hospitalData);
     const hospitalData = useRef(dataService.hospitalData);
@@ -86,9 +87,7 @@ const Calendar = () => {
 
     useEffect(() => {
         updateActiveItem('calendar');
-        if (specialistObj.current) {
-            specialistObj.current.hide();
-        }
+        setIsOpen(false);
     }, []);
 
     const onActionBegin = (args: Record<string, any>): void => {
@@ -195,7 +194,7 @@ const Calendar = () => {
                 const comboBoxElement: HTMLInputElement = createElement('input', { attrs: { id: 'PatientName' } }) as HTMLInputElement;
                 container.appendChild(comboBoxElement);
                 row.appendChild(container);
-                comboBox.current = new ComboBox({
+                comboBox.current.appendTo({
                     dataSource: patientsData,
                     allowFiltering: true,
                     fields: { text: 'Name', value: 'Id' },
@@ -210,11 +209,9 @@ const Calendar = () => {
                 });
                 comboBox.current.appendTo(comboBoxElement);
                 comboBoxElement.setAttribute('name', 'Name');
-                const buttonEle: HTMLButtonElement = createElement('button', { attrs: { name: 'PatientButton' } }) as HTMLButtonElement;
+                const buttonEle = createElement('button', { attrs: { name: 'PatientButton' } }) as HTMLButtonElement;
                 buttonEle.onclick = onAddPatient.bind(this);
                 container.appendChild(buttonEle);
-                const button: Button = new Button({ iconCss: 'e-icons e-add-icon', cssClass: 'e-small e-round', isPrimary: true });
-                button.appendTo(buttonEle);
             }
             comboBox.current.value = args.data['PatientId'] || null;
         }
@@ -339,14 +336,16 @@ const Calendar = () => {
         const deptId: string = target.getAttribute('data-deptid');
         const doctorId: string = target.getAttribute('data-doctorid');
         refreshDataSource(deptId, doctorId);
+
         const doctorImage: HTMLElement = scheduleObj.current.element.querySelector('.doctor-icon .active-doctor');
         doctorImage.setAttribute('src', loadImage(activeDoctorData.current[0]['Text']));
-        specialistObj.current.hide();
-    }
+
+        setIsOpen(false);
+    };
 
     const onBackIconClick = (): void => {
-        specialistObj.current.hide();
-    }
+        setIsOpen(false);
+    };
 
     const onWaitingListSelect = (): void => {
         if (waitingObj.current) {
@@ -495,15 +494,6 @@ const Calendar = () => {
         return filteredEvents;
     }
 
-    const clearSelection = (): void => {
-        if (activeDoctorData.current && activeDoctorData.current.length > 0) {
-            setDefaultData();
-            const doctorImage: HTMLElement = scheduleObj.current.element.querySelector('.doctor-icon .active-doctor');
-            doctorImage.setAttribute('src', doctorsIcon);
-        }
-        specialistObj.current.hide();
-    }
-
     const setDefaultData = (): void => {
         scheduleObj.current.resources[0].dataSource = specialistCategory;
         scheduleObj.current.resources[1].dataSource = resourceDataSource;
@@ -538,7 +528,7 @@ const Calendar = () => {
             <div>
                 <div className="quick-info-header">
                     <div className="quick-info-header-icon-wrapper">
-                        <ButtonComponent cssClass="e-flat e-round e-small" iconCss="e-icons e-close-icon" onClick={quickInfoCloseClick} />
+                        <Button className="e-flat e-round e-small" onClick={quickInfoCloseClick} />
                     </div>
                     <div className="quick-info-header-content" style={getBackGroundColor(props)}>
                         <div className="quick-info-title">Appointment Details</div>
@@ -559,6 +549,11 @@ const Calendar = () => {
                         </div>
                         <div style={{ padding: "10px" }}>
                             <input className="location e-field" type="text" name="Location" placeholder="Location" style={{ width: "100%" }} />
+                        </div>
+                        <div style={{ padding: "10px" }}>
+                            <Button className="e-small e-round" onClick={onAddPatient}>
+                                <span className="e-icons e-add-icon"></span>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -615,7 +610,7 @@ const Calendar = () => {
                     <span className="title-text">CHOOSE SPECIALIST</span>
                 </div>
                 <div>
-                    <ButtonComponent cssClass="e-small" onClick={clearSelection.bind(this)}>CLEAR</ButtonComponent>
+                    <Button className="e-small" >CLEAR</Button>
                 </div>
             </div>
         );
@@ -687,27 +682,44 @@ const Calendar = () => {
                     </div>
                     <div className="treeview-container">
                         <div className="choose-Specialist-container">
-                            <DropDownListComponent ref={dropdownObj} id='specialist' cssClass={"e-specialist-doctors" + (isDevice ? " e-specialist-hide" : "")} dataSource={doctorsData}
-                                fields={fields} placeholder='Choose Specialist' popupHeight='auto' popupWidth='221px' showClearButton={true}
-                                change={onDoctorSelect.bind(this)} itemTemplate={itemTemplate.bind(this)}
-                                footerTemplate={footerTemplate.bind(this)}></DropDownListComponent>
+                                <DropDownList
+                                    ref={dropdownObj}
+                                    id='specialist'
+                                    dataSource={doctorsData}
+                                    fields={fields}
+                                    placeholder='Choose Specialist'
+                                    clearButton={true}
+                                    onChange={onDoctorSelect.bind(this)}
+                                    itemTemplate={itemTemplate.bind(this)}
+                                    footerTemplate={footerTemplate()}
+                                    popupSettings={{ height: '500px', width: '500px' }}
+                                    className={"e-specialist-doctors" + (isDevice ? " e-specialist-hide" : "")}
+                                />
                         </div>
                         <div className="add-event-container" style={{ display: 'none' }}>
-                            <ButtonComponent onClick={createNewEvent.bind(this)} className="e-primary">Add Appointment</ButtonComponent>
+                            <Button onClick={createNewEvent.bind(this)} className="e-primary">Add Appointment</Button>
                         </div>
                         <div className="title-container">
                             <h2 className="title-text">Waiting List</h2>
                         </div>
-                        <ToastComponent ref={toastObj} position={position} width={toastWidth} height='70px' showCloseButton={true}>
-                        </ToastComponent>
+                        <Toast ref={toastObj} position={position} width={toastWidth} height='70px' closeButton={true}>
+                        </Toast>
                         <TreeWaitingList ref={treeObj} getCalendarData={getCalendarData} setTreeItemDrop={setTreeItemDrop} />
                     </div>
                 </div >
             </div >
             <div className="specialist-dialog" style={{ display: 'none' }}>
-                <DialogComponent ref={specialistObj} height='500px' isModal={true} visible={false} cssClass='specialist-selection'
-                    animationSettings={animationSettings} showCloseIcon={false} target='#content-area' width='100%'
-                    header={speciaListDialogHeader.bind(this)} footerTemplate={speciaListDialogFooter.bind(this)}>
+                <Dialog
+                    ref={specialistObj}
+                    open={isOpen}
+                    style={{ height: '500px', width: '100%' }}
+                    className='specialist-selection'
+                    modal={true}
+                    closeIcon={false}
+                    target={document.getElementById('content-area') ?? undefined}
+                    header={speciaListDialogHeader()}
+                    footer={speciaListDialogFooter()}
+                >
                     <div>
                         {
                             specialistData && specialistData.map((specialist: Record<string, any>, index: number) => {
@@ -726,7 +738,7 @@ const Calendar = () => {
                             })
                         }
                     </div>
-                </DialogComponent>
+                </Dialog>
             </div>
             <div className="waiting-list-container" style={{ display: 'none' }}>
                 <DialogWaitingList ref={waitingObj} getCalendarData={getCalendarData} updateEventData={updateEventData} />

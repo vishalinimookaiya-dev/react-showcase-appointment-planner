@@ -422,10 +422,10 @@
             padding: 0 10px;
 
             img {
-                height: 38px;
-                width: 38px;
-                border-radius: 16px;
-                padding: 3px;
+                height: 38px !important;
+                width: 38px !important;
+                border-radius: 16px !important;
+                padding: 3px !important;
             }
 
             .doctor-details {

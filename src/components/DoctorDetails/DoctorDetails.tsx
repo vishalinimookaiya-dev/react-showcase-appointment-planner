@@ -426,7 +426,7 @@ export const DoctorDetails = () => {
                     modal={true}
                     header='Doctor Details'
                     closeIcon={true}
-                    onClose={() => setIsBreakOpen(false)}
+                    onClose={() => setIsDeleteOpen(false)}
                     target={dialogTarget ?? undefined}
                     footer={confirmationFooter()}
                 >

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useRef, forwardRef, useImperativeHandle, MutableRefObject, useState } from 'react';
-import { isNullOrUndefined } from '@syncfusion/ej2-base';
+import { isNullOrUndefined } from '@syncfusion/react-base';
 import { Button, Color } from '@syncfusion/react-buttons';
 import { FormValidator, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
 import { TextBox } from '@syncfusion/react-inputs';

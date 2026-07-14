@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { addClass, closest, Internationalization } from '@syncfusion/ej2-base';
+import { Internationalization } from '@syncfusion/ej2-base';
+import { addClass, closest } from '@syncfusion/react-base';
 import { TreeViewComponent, DragAndDropEventArgs } from '@syncfusion/ej2-react-navigations';
 import { CellClickEventArgs } from '@syncfusion/ej2-react-schedule';
 import { useData } from '../../../context/DataContext';

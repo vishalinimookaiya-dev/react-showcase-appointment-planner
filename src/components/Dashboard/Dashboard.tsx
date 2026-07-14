@@ -83,6 +83,22 @@ export const Dashboard = () => {
 
     const gridData: Record<string, any>[] = getGridData();
 
+    const doctorNameTemplate = useCallback((props?: any): React.ReactElement => {
+        const data = props?.data ?? props;
+        return (
+            <a
+                className="doctor-name-link"
+                href="#"
+                onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/doctor-details/' + data.DoctorId);
+                }}
+            >
+                {data?.DoctorName}
+            </a>
+        );
+    }, [navigate]);
+
     useEffect(() => {
         updateActiveItem('dashboard');
     }, []);
@@ -137,16 +153,7 @@ export const Dashboard = () => {
                                                 headerText="Doctor Name"
                                                 width="150"
                                                 textAlign="Left"
-                                                template={(props: any) => (
-                                                    <span
-                                                        className="doctor-name-link"
-                                                        onClick={() => navigate('/doctor-details/' + props.DoctorId)}
-                                                        role="button"
-                                                        tabIndex={0}
-                                                    >
-                                                        {props.DoctorName}
-                                                    </span>
-                                                )}
+                                                template={doctorNameTemplate}
                                             />
                                             <Column
                                                 field="Symptoms"

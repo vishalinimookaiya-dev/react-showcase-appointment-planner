@@ -1,264 +1,387 @@
 import * as React from 'react';
 import { useRef, useEffect, useState, memo, useCallback } from 'react';
-import { createElement, Internationalization, closest } from '@syncfusion/ej2-base';
-import { Dialog, DialogComponent } from '@syncfusion/ej2-react-popups';
+import { Internationalization } from '@syncfusion/ej2-base';
+import { DataManager, Query, ReturnOption } from '@syncfusion/react-data';
+import { Dialog } from '@syncfusion/react-popups';
 import { Button, Color, Variant } from '@syncfusion/react-buttons';
-import { Grid, Columns, Column } from '@syncfusion/react-grid';
+import {
+  Grid,
+  Columns,
+  Column,
+  GridRef,
+  ColumnTemplateProps,
+  TextAlign,
+  ClipMode
+} from '@syncfusion/react-grid';
 import { AddEditPatient } from '../AddEditPatient/AddEditPatient';
 import { useData, useDataDispatch } from '../../context/DataContext';
 import { updateActiveItem } from '../../util';
 import './Patients.scss';
 
+interface PatientData {
+  Id: number;
+  Name: string;
+  Gender: string;
+  BloodGroup: string;
+  DOB: Date;
+  Mobile: string;
+  Email: string;
+  Symptoms: string;
+}
+
+interface HospitalData {
+  PatientId: number;
+  DoctorId: number;
+  StartTime: Date;
+  EndTime: Date;
+}
+
 const Patients = () => {
   const dataService = useData();
   const dispatch = useDataDispatch();
-  const gridObj = useRef<any>(null);
+  const gridObj = useRef<GridRef>(null);
   const addEditPatientObj = useRef(null);
-  const deleteConfirmationDialogObj = useRef<DialogComponent>(null);
-  let patientsData: Record<string, any>[] = dataService.patientsData;
-  const [filteredPatients, setFilteredPatients] = useState(dataService.patientsData);
-  let activePatientData: Record<string, any> = dataService.activePatientData;
-  let activePatientHistory: Record<string, any>[] = dataService.activePatientHistory;
-  const hospitalData: Record<string, any>[] = dataService.hospitalData;
+  const deleteConfirmationDialogObj = useRef<any>(null);
+  const patientDetailsDialogObj = useRef<any>(null);
+  let patientsData: PatientData[] = dataService.patientsData;
+  const [filteredPatients, setFilteredPatients] = useState<PatientData[]>(dataService.patientsData);
+  let activePatientData: PatientData = dataService.activePatientData;
+  let activePatientHistory: HospitalData[] = dataService.activePatientHistory;
+  const hospitalData: HospitalData[] = dataService.hospitalData;
   const doctorsData: Record<string, any>[] = dataService.doctorsData;
   const intl: Internationalization = new Internationalization();
-  let gridDialog: Dialog;
-  const animationSettings: Record<string, any> = { effect: 'None' };
   const isPatientClick = useRef(false);
+  const [isPatientDetailsOpen, setIsPatientDetailsOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   useEffect(() => {
     updateActiveItem('patients');
   }, []);
 
-  const openPatient = (patient: Record<string, any>) => {
-    activePatientData = patient;
-    const history = hospitalData.filter((item: Record<string, any>) => item['PatientId'] === patient['Id']);
-    activePatientHistory = history;
-    dispatch({ type: 'SET_ACTIVE_PATIENT', data: patient });
-    dispatch({ type: 'SET_ACTIVE_PATIENT_HISTORY', data: history });
-  };
+  const onPatientClick = (event: React.MouseEvent<HTMLSpanElement>, rowData: PatientData): void => {
+    event.preventDefault();
+    try {
+      if (rowData) {
+        activePatientData = rowData;
+      }
 
-  const onBeginEdit = (args: any) => {
-    if (!isPatientClick.current) {
-      args.cancel = true;
-      (args.row.querySelector('.patient-name') as HTMLElement).click();
-    } else {
-      isPatientClick.current = false;
-    }
-  };
+      activePatientHistory = hospitalData.filter(
+        (item: HospitalData) => item['PatientId'] === activePatientData['Id']
+      );
+      dispatch({ type: 'SET_ACTIVE_PATIENT', data: activePatientData });
+      dispatch({ type: 'SET_ACTIVE_PATIENT_HISTORY', data: activePatientHistory });
 
-  const onDataEdit = (args: any): void => {
-    if (args.requestType === 'beginEdit') {
-      gridDialog = args.dialog as Dialog;
-      gridDialog.header = 'Patient Details';
-      const editButtonElement: HTMLElement = createElement('button', {
-        className: 'edit-patient',
-        id: 'edit',
-        innerHTML: 'Edit',
-        attrs: { type: 'button', title: 'Edit' }
-      });
-      editButtonElement.onclick = onEditPatient.bind(this);
-      const deleteButtonElement: HTMLElement = createElement('button', {
-        className: 'delete-patient',
-        id: 'delete',
-        innerHTML: 'Delete',
-        attrs: { type: 'button', title: 'Delete', content: 'DELETE' }
-      });
-      deleteButtonElement.onclick = onDeletePatient.bind(this);
-      gridDialog.element.querySelector('.e-footer-content').appendChild(deleteButtonElement);
-      gridDialog.element.querySelector('.e-footer-content').appendChild(editButtonElement);
+      setIsPatientDetailsOpen(true);
+    } catch (error) {
+      console.error('Error getting row data:', error);
     }
+    isPatientClick.current = true;
   };
 
   const onDeletePatient = (): void => {
-    deleteConfirmationDialogObj.current.show();
+    setIsDeleteOpen(true);
   };
 
   const onDeleteClick = (): void => {
-    patientsData = patientsData.filter((item: Record<string, any>) => item['Id'] !== activePatientData['Id']);
+    patientsData = patientsData.filter((item: PatientData) => item['Id'] !== activePatientData['Id']);
     setFilteredPatients(patientsData);
     dispatch({ type: 'SET_PATIENTS_DATA', data: patientsData });
-    gridObj.current.closeEdit();
-    deleteConfirmationDialogObj.current.hide();
-    gridObj.current.dataSource = patientsData;
+
+    setIsDeleteOpen(false);
+    setIsPatientDetailsOpen(false);
+
+    if (gridObj.current) {
+      (gridObj.current as any).dataSource = patientsData;
+    }
   };
 
   const onDeleteCancelClick = (): void => {
-    deleteConfirmationDialogObj.current.hide();
+    setIsDeleteOpen(false);
   };
 
   const onAddPatient = (): void => {
-    addEditPatientObj.current.onAddPatient();
+    addEditPatientObj.current?.onAddPatient();
   };
 
   const onEditPatient = (): void => {
-    gridObj.current.closeEdit();
-    addEditPatientObj.current.showDetails();
+    setIsPatientDetailsOpen(false);
+    addEditPatientObj.current?.showDetails();
+  };
+
+  const onClosePatientDetails = (): void => {
+    setIsPatientDetailsOpen(false);
   };
 
   const getPatientDOB = (dob: Date): string => {
     return intl.formatDate(dob, { skeleton: 'yMd' });
   };
 
-  const getPatientHistoryContent = (item: Record<string, any>): string => {
+  const getPatientHistoryContent = (item: HospitalData): string => {
     return (
-      intl.formatDate(item['StartTime'], { skeleton: 'MMMd' }) + ' - ' +
-      intl.formatDate(item['StartTime'], { skeleton: 'hm' }) + ' - ' +
+      intl.formatDate(item['StartTime'], { skeleton: 'MMMd' }) +
+      ' - ' +
+      intl.formatDate(item['StartTime'], { skeleton: 'hm' }) +
+      ' - ' +
       intl.formatDate(item['EndTime'], { skeleton: 'hm' }) +
-      ' Appointment with Dr.' + getDoctorName(item['DoctorId'])
+      ' Appointment with Dr.' +
+      getDoctorName(item['DoctorId'])
     );
   };
 
   const getDoctorName = (id: number): string => {
-    const activeDoctor: Record<string, any>[] = doctorsData.filter((item: Record<string, any>) => item['Id'] === id);
+    const activeDoctor: Record<string, any>[] = doctorsData.filter(
+      (item: Record<string, any>) => item['Id'] === id
+    );
     return activeDoctor.length > 0 ? activeDoctor[0]['Name'] : 'Unknown';
   };
 
-  const patientSearch = (args: React.ChangeEvent<HTMLInputElement>): void => {
-    const searchString: string = args.target.value;
+  const patientSearch = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+    const searchString: string = (event.target as HTMLInputElement).value;
     if (searchString !== '') {
-      const result = patientsData.filter((item: Record<string, any>) =>
-        ['Id', 'Name', 'Gender', 'BloodGroup', 'Mobile']
-          .some((key) => String(item[key] ?? '').toLowerCase().includes(searchString.toLowerCase()))
-      );
-      setFilteredPatients(result);
+      new DataManager(patientsData)
+        .executeQuery(
+          new Query().search(searchString, ['Id', 'Name', 'Gender', 'BloodGroup', 'Mobile'], null, true, true)
+        )
+        .then((e: ReturnOption) => {
+          if ((e.result as PatientData[]).length > 0) {
+            setFilteredPatients(e.result as PatientData[]);
+          } else {
+            setFilteredPatients([]);
+          }
+        });
     } else {
-      setFilteredPatients(patientsData);
+      patientSearchCleared(event as any);
     }
   };
 
-  const patientSearchCleared = (args: MouseEvent): void => {
+  const patientSearchCleared = (event: React.MouseEvent<HTMLSpanElement>): void => {
     setFilteredPatients(patientsData);
-    if ((args.target as HTMLElement).previousElementSibling) {
-      ((args.target as HTMLElement).previousElementSibling as HTMLInputElement).value = '';
+    if ((event.target as HTMLElement).previousElementSibling) {
+      ((event.target as HTMLElement).previousElementSibling as HTMLInputElement).value = '';
     }
   };
 
   const gridRefresh = (): void => {
     patientsData = dataService.patientsData;
     setFilteredPatients(patientsData);
-    gridObj.current.refresh();
+    gridObj.current?.refresh();
   };
 
-  const columnTemplate = useCallback((props: Record<string, any>): JSX.Element => {
-    return (
-      <span
-        className="patient-name"
-        onClick={() => {
-          openPatient(props);
-          gridObj.current?.selectRow?.(props.index ?? 0);
-        }}
-      >
-        {props.Name}
-      </span>
-    );
-  }, [dispatch, hospitalData]);
+  const columnTemplate = useCallback(
+    (props?: ColumnTemplateProps): JSX.Element => {
+      const data = props?.data as PatientData;
+      return (
+        <span
+          className="patient-name"
+          onClick={(e) => onPatientClick(e, data)}
+          role="button"
+          tabIndex={0}
+          style={{ cursor: 'pointer' }}
+        >
+          {data?.Name}
+        </span>
+      );
+    },
+    []
+  );
 
-  const dialogTemplate = (): JSX.Element => {
+  const renderPatientDetailsContent = (): JSX.Element => {
     return (
-      <div className='grid-edit-dialog'>
-        <div className='field-row'>
-          <label> Patient Id </label><span id='Id'>{activePatientData['Id']}</span>
+      <div className="grid-edit-dialog">
+        <div className="field-row">
+          <label> Patient Id </label>
+          <span id="Id">{activePatientData['Id']}</span>
         </div>
-        <div className='field-row'>
-          <label> Patient Name </label><span id='Name'>{activePatientData['Name']}</span>
+        <div className="field-row">
+          <label> Patient Name </label>
+          <span id="Name">{activePatientData['Name']}</span>
         </div>
-        <div className='field-row'>
-          <label> Gender </label><span id='Gender'>{activePatientData['Gender']}</span>
+        <div className="field-row">
+          <label> Gender </label>
+          <span id="Gender">{activePatientData['Gender']}</span>
         </div>
-        <div className='field-row'>
-          <label> DOB </label><span id='DOB'>{getPatientDOB(activePatientData['DOB'])}</span>
+        <div className="field-row">
+          <label> DOB </label>
+          <span id="DOB">{getPatientDOB(activePatientData['DOB'])}</span>
         </div>
-        <div className='field-row'>
-          <label> Blood Group </label><span id='BloodGroup'>{activePatientData['BloodGroup']}</span>
+        <div className="field-row">
+          <label> Blood Group </label>
+          <span id="BloodGroup">{activePatientData['BloodGroup']}</span>
         </div>
-        <div className='field-row'>
-          <label> Mobile Number </label><span id='Mobile'>{activePatientData['Mobile']}</span>
+        <div className="field-row">
+          <label> Mobile Number </label>
+          <span id="Mobile">{activePatientData['Mobile']}</span>
         </div>
-        <div className='field-row'>
-          <label> Email </label><span id='Email'>{activePatientData['Email']}</span>
+        <div className="field-row">
+          <label> Email </label>
+          <span id="Email">{activePatientData['Email']}</span>
         </div>
-        <div className='field-row'>
-          <label> Symptoms </label><span id='Symptoms'>{activePatientData['Symptoms']}</span>
+        <div className="field-row">
+          <label> Symptoms </label>
+          <span id="Symptoms">{activePatientData['Symptoms']}</span>
         </div>
-        <div className='field-row history-row'>
+        <div className="field-row history-row">
           <label>Appointment History</label>
-          <div id='history-wrapper'>
-            {
-              activePatientHistory && activePatientHistory.length > 0 ?
-                activePatientHistory.map((item: Record<string, any>, index: number) => {
-                  return (
-                    <div key={index} className='history-content'>{getPatientHistoryContent(item)}</div>
-                  );
-                }) : <div className='empty-container'>No Events!</div>
-            }
+          <div id="history-wrapper">
+            {activePatientHistory && activePatientHistory.length > 0
+              ? activePatientHistory.map((item: HospitalData, index: number) => (
+                  <div key={index} className="history-content">
+                    {getPatientHistoryContent(item)}
+                  </div>
+                ))
+              : <div className="empty-container">No Events!</div>}
           </div>
         </div>
       </div>
     );
   };
 
-  const footerTemplate = (): JSX.Element => {
+  const renderPatientDetailsFooter = (): JSX.Element => {
     return (
       <div className="button-container">
-        <Button className="e-normal" id="delete" onClick={onDeleteClick}>Ok</Button>
-        <Button className="e-normal" id="edit" onClick={onEditPatient}>Edit</Button>
+        <Button className="e-normal" variant={Variant.Outlined} color={Color.Secondary} onClick={onDeletePatient}>
+          Delete
+        </Button>
+        <Button className="e-normal" onClick={onEditPatient}>
+          Edit
+        </Button>
+        <Button className="e-normal" variant={Variant.Outlined} color={Color.Secondary} onClick={onClosePatientDetails}>
+          Cancel
+        </Button>
+      </div>
+    );
+  };
+
+  const renderDeleteConfirmationFooter = (): JSX.Element => {
+    return (
+      <div className="button-container">
+        <Button className="e-normal" onClick={onDeleteClick}>
+          Ok
+        </Button>
+        <Button className="e-normal" variant={Variant.Outlined} color={Color.Secondary} onClick={onDeleteCancelClick}>
+          Cancel
+        </Button>
       </div>
     );
   };
 
   return (
     <>
-      <div id='patient-wrapper' className="planner-patient-wrapper">
+      <div id="patient-wrapper" className="planner-patient-wrapper">
         <header>
           <div className="module-title">
-            <div className='title'>PATIENT LIST</div>
-            <div className='underline'></div>
+            <div className="title">PATIENT LIST</div>
+            <div className="underline"></div>
           </div>
-          <div className='add-patient' onClick={onAddPatient.bind(this)}>
+          <div className="add-patient" onClick={onAddPatient}>
             <div className="e-icon-add e-icons"></div>
             <div className="add-patient-label">Add New</div>
           </div>
         </header>
         <div className="patients-detail-wrapper">
           <div className="patient-operations">
-            <div id='searchTemplate' className='search-wrapper planner-patient-search'>
+            <div id="searchTemplate" className="search-wrapper planner-patient-search">
               <div className="e-input-group" role="search">
-                <input id="schedule_searchbar" className="e-input" name="input" type="search" placeholder="Search Patient" onKeyUp={patientSearch.bind(this)} />
-                <span className="e-clear-icon" aria-label="close" role="button" onClick={patientSearchCleared.bind(this)}></span>
-                <span id="schedule_searchbutton" className="e-input-group-icon search-icon e-icons" tabIndex={-1} title="Search" aria-label="search"></span>
+                <input
+                  id="schedule_searchbar"
+                  className="e-input"
+                  name="input"
+                  type="search"
+                  placeholder="Search Patient"
+                  onKeyUp={(e) => patientSearch(e)}
+                />
+                <span
+                  className="e-clear-icon"
+                  aria-label="close"
+                  role="button"
+                  onClick={(e) => patientSearchCleared(e as any)}
+                ></span>
+                <span
+                  id="schedule_searchbutton"
+                  className="e-input-group-icon search-icon e-icons"
+                  tabIndex={-1}
+                  title="Search"
+                  aria-label="search"
+                ></span>
               </div>
             </div>
-            <Button className="e-normal add-details" onClick={onAddPatient.bind(this)}>Add New Patient</Button>
+            <Button className="e-normal add-details" onClick={onAddPatient}>
+              Add New Patient
+            </Button>
           </div>
           <div className="patient-display">
-            <Grid ref={gridObj} dataSource={filteredPatients} editSettings={{
-              allowEdit: true, allowAdd: true,
-              allowDelete: true, mode: 'Normal', template: dialogTemplate
-            }}>
+            <Grid ref={gridObj} dataSource={filteredPatients}>
               <Columns>
-                <Column field='Id' width='50' headerText='ID' textAlign='Left' isPrimaryKey={true}></Column>
-                <Column field='Name' width='100' textAlign='Left'></Column>
-                <Column field='Gender' width='80' textAlign='Left'></Column>
-                <Column field='BloodGroup' headerText='Blood Group' width='100' textAlign='Left'></Column>
-                <Column field='Symptoms' width='150' textAlign='Left' clipMode='EllipsisWithTooltip'></Column>
-                <Column field='Mobile' headerText='Mobile Number' width='100' textAlign='Left'></Column>
-                <Column field='Email' headerText='Email' width='120' textAlign='Left'></Column>
+                <Column
+                  field="Id"
+                  width="50"
+                  headerText="ID"
+                  textAlign={TextAlign.Left}
+                  isPrimaryKey={true}
+                />
+                <Column
+                  field="Name"
+                  width="100"
+                  textAlign={TextAlign.Left}
+                  template={columnTemplate}
+                />
+                <Column field="Gender" width="80" textAlign={TextAlign.Left} />
+                <Column
+                  field="BloodGroup"
+                  headerText="Blood Group"
+                  width="100"
+                  textAlign={TextAlign.Left}
+                />
+                <Column
+                  field="Symptoms"
+                  width="150"
+                  textAlign={TextAlign.Left}
+                  clipMode={ClipMode.EllipsisWithTooltip}
+                />
+                <Column
+                  field="Mobile"
+                  headerText="Mobile Number"
+                  width="100"
+                  textAlign={TextAlign.Left}
+                />
+                <Column field="Email" headerText="Email" width="120" textAlign={TextAlign.Left} />
               </Columns>
             </Grid>
           </div>
         </div>
       </div>
+
       <AddEditPatient ref={addEditPatientObj} refreshEvent={gridRefresh.bind(this)} />
-      <div className="delete-confirmation-container" style={{ display: 'none' }}>
-        <DialogComponent ref={deleteConfirmationDialogObj} width='445px' className='break-hour-dialog' isModal={true}
-          visible={false} animationSettings={animationSettings} header='Patient Details' showCloseIcon={true}
-          target='#content-area' footerTemplate={footerTemplate.bind(this)}>
-          <form>
-            <div>Are you sure you want to delete this patient?</div>
-          </form>
-        </DialogComponent>
-      </div>
+
+      <Dialog
+        ref={patientDetailsDialogObj}
+        style={{ width: '600px' }}
+        className="patient-details-dialog"
+        modal={true}
+        open={isPatientDetailsOpen}
+        header="Patient Details"
+        closeIcon={true}
+        target={document.getElementById('content-area') ?? undefined}
+        footer={renderPatientDetailsFooter()}
+      >
+        {renderPatientDetailsContent()}
+      </Dialog>
+
+      <Dialog
+        ref={deleteConfirmationDialogObj}
+        style={{ width: '445px' }}
+        className="break-hour-dialog"
+        modal={true}
+        open={isDeleteOpen}
+        header="Delete Patient"
+        closeIcon={true}
+        target={document.getElementById('content-area') ?? undefined}
+        footer={renderDeleteConfirmationFooter()}
+      >
+        <form>
+          <div>Are you sure you want to delete this patient?</div>
+        </form>
+      </Dialog>
     </>
   );
 };
