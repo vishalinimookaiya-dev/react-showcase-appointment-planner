@@ -253,7 +253,7 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
                 closeIcon={true}
                 target={dialogTarget ?? undefined}
                 footer={footerTemplate()}
-                onClose={onBeforeClose}
+                onClose={()=> setIsOpen(false)}
             >
                 <form id='new-patient-form'>
                     <div className="field-container name-container">

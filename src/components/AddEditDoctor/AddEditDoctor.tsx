@@ -269,7 +269,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                 closeIcon={true}
                 open={isOpen}
                 footer={footerTemplate()}
-                onClose={onBeforeClose}
+                onClose={()=> setIsOpen(false)}
             >
                 <form id="new-doctor-form">
                     <div className="name-container">

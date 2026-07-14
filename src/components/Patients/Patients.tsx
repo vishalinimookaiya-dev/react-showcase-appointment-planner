@@ -245,9 +245,6 @@ const Patients = () => {
         <Button className="e-normal" onClick={onEditPatient}>
           Edit
         </Button>
-        <Button className="e-normal" variant={Variant.Outlined} color={Color.Secondary} onClick={onClosePatientDetails}>
-          Cancel
-        </Button>
       </div>
     );
   };
@@ -359,6 +356,7 @@ const Patients = () => {
         className="patient-details-dialog"
         modal={true}
         open={isPatientDetailsOpen}
+        onClose={() => setIsPatientDetailsOpen(false)}
         header="Patient Details"
         closeIcon={true}
         target={document.getElementById('content-area') ?? undefined}
@@ -373,6 +371,7 @@ const Patients = () => {
         className="break-hour-dialog"
         modal={true}
         open={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
         header="Delete Patient"
         closeIcon={true}
         target={document.getElementById('content-area') ?? undefined}
