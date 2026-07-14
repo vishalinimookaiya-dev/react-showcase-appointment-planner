@@ -113,7 +113,8 @@ export const Doctors = () => {
               <Tooltip
                 key={index}
                 content={tooltipContent(data['Availability'])}
-                position="RightTop"
+                position="TopCenter"
+                arrow={false}
                 className="availability-tooltip"
               >
                 <div onClick={onSpecialistClick}>

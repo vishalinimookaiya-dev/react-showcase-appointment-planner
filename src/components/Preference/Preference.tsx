@@ -28,7 +28,6 @@ export const Preference = () => {
     updateActiveItem('preference');
   }, []);
 
-
   return (
     <div className='preference-container'>
       <header>
@@ -37,31 +36,84 @@ export const Preference = () => {
           <div className='underline'></div>
         </div>
       </header>
+
       <div className="control-container">
         <div className='label-text'>Default View</div>
-        <DropDownList className='preference-drop-down' id='CurrentView' width={width} dataSource={views}
-          fields={fields}  variant={Variant.Outlined}></DropDownList>
+        <DropDownList
+          className="preference-drop-down"
+          id="CurrentView"
+          width={width}
+          dataSource={views}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={views[1].Value}
+        />
       </div>
+
+      <div className="control-container">
+        <div className='label-text'>Calendar Start Time</div>
+        <DropDownList
+          className='preference-drop-down'
+          id='CalendarStart'
+          width={width}
+          dataSource={startHours}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={startHours[0].Value}
+        />
+      </div>
+
       <div className="control-container">
         <div className='label-text'>Calendar End Time</div>
-        <DropDownList className='preference-drop-down' id='CalendarEnd' width={width} dataSource={endHours}
-          fields={fields}  variant={Variant.Outlined}></DropDownList>
+        <DropDownList
+          className='preference-drop-down'
+          id='CalendarEnd'
+          width={width}
+          dataSource={endHours}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={endHours[0].Value}
+        />
       </div>
+
       <div className="control-container">
         <div className='label-text'>Slot Duration</div>
-        <DropDownList className='preference-drop-down' id='Duration' width={width} dataSource={timeSlots}
-          fields={fields} variant={Variant.Outlined}></DropDownList>
+        <DropDownList
+          className='preference-drop-down'
+          id='Duration'
+          width={width}
+          dataSource={timeSlots}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={timeSlots[2].Value}
+        />
       </div>
+
       <div className="control-container">
         <div className='label-text'>Booking Color</div>
-        <DropDownList className='preference-drop-down' id='BookingColor' width={width} dataSource={colorCategory}
-          fields={fields} variant={Variant.Outlined}></DropDownList>
+        <DropDownList
+          className='preference-drop-down'
+          id='BookingColor'
+          width={width}
+          dataSource={colorCategory}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={colorCategory[0].Value}
+        />
       </div>
+
       <div className="control-container">
         <div className='label-text'>First Day of the Week</div>
-        <DropDownList className='preference-drop-down' id='FirstDayOfWeek' width={width} dataSource={dayOfWeeks}
-          fields={fields} variant={Variant.Outlined}></DropDownList>
+        <DropDownList
+          className='preference-drop-down'
+          id='FirstDayOfWeek'
+          width={width}
+          dataSource={dayOfWeeks}
+          fields={fields}
+          variant={Variant.Outlined}
+          value={dayOfWeeks[0].Value}
+        />
       </div>
     </div>
-  )
-}
+  );
+};

@@ -56,18 +56,26 @@ export const RecentActivity = () => {
 
     const listTemplate = (props: Record<string, any>): JSX.Element => {
         return (
-            <div className={'activity-container ' + props.Type}>
-                <div className='activity-message'><span className='type-name'>{props.Name}</span> - <span>{props.Message}</span></div>
-                <span className='activity-time'>{props.Time}</span>
+            <div className={'activity-container ' + (props.Type ?? '')}>
+                <div className='activity-message'>
+                    <span className='type-name'>{props.Name ?? ''}</span> - <span>{props.Message ?? ''}</span>
+                </div>
+                <span className='activity-time'>{props.Time ?? ''}</span>
             </div>
         );
-    }
+};
 
     return (
         <>
             <h3>Recent Activities</h3>
-            <ListView id='listview_template' style={{height:'88%', width:'100%'}} dataSource={dataSource} className='activity-template'
-                itemTemplate={listTemplate.bind(this)}>
+            <ListView
+                id='listview_template'
+                style={{ height: '88%', width: '100%' }}
+                dataSource={dataSource}
+                className='activity-template'
+                itemTemplate={listTemplate}
+                fields={{ id: 'Id', text: 'Name' }}
+            >
             </ListView>
         </>
     )

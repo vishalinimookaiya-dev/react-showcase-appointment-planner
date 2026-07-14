@@ -40,9 +40,11 @@ const Patients = () => {
   const dataService = useData();
   const dispatch = useDataDispatch();
   const gridObj = useRef<GridRef>(null);
-  const addEditPatientObj = useRef(null);
+  const addEditPatientObj = useRef<any>(null);
   const deleteConfirmationDialogObj = useRef<any>(null);
   const patientDetailsDialogObj = useRef<any>(null);
+  const calendarComboBoxObj = useRef<any>(null);
+
   let patientsData: PatientData[] = dataService.patientsData;
   const [filteredPatients, setFilteredPatients] = useState<PatientData[]>(dataService.patientsData);
   let activePatientData: PatientData = dataService.activePatientData;
@@ -108,12 +110,10 @@ const Patients = () => {
     addEditPatientObj.current?.showDetails();
   };
 
-  const onClosePatientDetails = (): void => {
-    setIsPatientDetailsOpen(false);
-  };
-
-  const getPatientDOB = (dob: Date): string => {
-    return intl.formatDate(dob, { skeleton: 'yMd' });
+  const getPatientDOB = (dob: Date | string | undefined): string => {
+    if (!dob) return 'N/A';
+    const dateValue = dob instanceof Date ? dob : new Date(dob);
+    return intl.formatDate(dateValue, { skeleton: 'yMd' });
   };
 
   const getPatientHistoryContent = (item: HospitalData): string => {
@@ -150,7 +150,7 @@ const Patients = () => {
           }
         });
     } else {
-      patientSearchCleared(event as any);
+      setFilteredPatients(patientsData);
     }
   };
 
@@ -171,7 +171,7 @@ const Patients = () => {
     (props?: ColumnTemplateProps): JSX.Element => {
       const data = props?.data as PatientData;
       return (
-        <span
+        <a
           className="patient-name"
           onClick={(e) => onPatientClick(e, data)}
           role="button"
@@ -179,7 +179,7 @@ const Patients = () => {
           style={{ cursor: 'pointer' }}
         >
           {data?.Name}
-        </span>
+        </a>
       );
     },
     []

@@ -1196,6 +1196,7 @@ export const dutyTimingsData: Record<string, any>[] = [
 
 export const activityData: Record<string, any>[] = [
     {
+        Id: 1,  // Add this
         Name: 'Added New Doctor',
         Message: 'Dr.Johnson James, Cardiologist',
         Time: '5 mins ago',
@@ -1203,6 +1204,7 @@ export const activityData: Record<string, any>[] = [
         ActivityTime: new Date(2023, 7, 8, 9, 0)
     },
     {
+        Id: 2,  // Add this
         Name: 'Added New Appointment',
         Message: 'Laura for General Checkup on 7th September, 2023 @ 8.30 AM with Dr.Molli Cobb',
         Time: '5 mins ago',
@@ -1210,6 +1212,7 @@ export const activityData: Record<string, any>[] = [
         ActivityTime: new Date(2023, 7, 8, 11, 0)
     },
     {
+        Id: 3,  // Add this
         Name: 'Added New Patient',
         Message: 'James Richard for Fever and cold',
         Time: '5 mins ago',
@@ -1217,6 +1220,7 @@ export const activityData: Record<string, any>[] = [
         ActivityTime: new Date(2023, 7, 8, 10, 0)
     },
     {
+        Id: 4,  // Add this
         Name: 'Added New Appointment',
         Message: 'Joseph for consultation on 7th December, 2023 @ 11.10 AM with Dr.Molli Cobb',
         Time: '5 mins ago',

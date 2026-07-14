@@ -24,11 +24,11 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
     const activityDispatch = useActivityDispatch();
     const newDoctorObj = useRef<any>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [dialogState, setDialogState] = useState<'new' | 'edit'>('new');
+    const [title, setTitle] = useState('New Doctor');
 
     let doctorsData: Record<string, any>[] = dataService.doctorsData;
     let activeDoctorData: Record<string, any> = dataService.activeDoctorData;
-    let dialogState: string;
-    let title = 'New Doctor';
     let specializationData: Record<string, any>[] = specializationList;
     let fields: Record<string, any> = { text: 'Text', value: 'Id' };
     let experienceData: Record<string, any>[] = experienceList;
@@ -44,15 +44,13 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
     }));
 
     const onAddDoctor = (): void => {
-        dialogState = 'new';
-        title = 'New Doctor';
+        setDialogState('new');
+        setTitle('New Doctor');
         setIsOpen(true);
-        newDoctorObj.current.show();
     };
 
     const onCancelClick = (): void => {
         setIsOpen(false);
-        newDoctorObj.current.hide();
     };
 
     const onSaveClick = (): void => {
@@ -63,26 +61,35 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
         }
 
         let obj: Record<string, any> = dialogState === 'new' ? {} : activeDoctorData;
-        const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
+        const formElements: HTMLElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
 
-        for (const curElement of formElement) {
-            const inputElement: HTMLInputElement = curElement.querySelector('input');
-            let columnName: string = inputElement.name;
+        for (const curElement of formElements) {
             const isCustomElement: boolean = curElement.classList.contains('e-ddl');
-
-            if (!isNullOrUndefined(columnName) || isCustomElement) {
-                if (columnName === '' && isCustomElement) {
-                    columnName = curElement.querySelector('select').name;
-                    const instance: any = ((inputElement as Element) as EJ2Instance).ej2_instances[0];
-                    obj[columnName] = instance.value;
-                    const value: string = instance.value as string;
-                    if (columnName === 'Specialization') {
-                        obj['DepartmentId'] = (instance.getDataByValue(value) as Record<string, any>)['DepartmentId'];
+            
+            if (isCustomElement) {
+                // For DropDownList elements, get the EJ2 instance directly
+                const instance: any = (curElement as EJ2Instance).ej2_instances?.[0];
+                if (instance) {
+                    const columnName: string = instance.name || instance.element?.name;
+                    if (columnName) {
+                        obj[columnName] = instance.value;
+                        const value: string = instance.value as string;
+                        if (columnName === 'Specialization' && instance.getDataByValue) {
+                            obj['DepartmentId'] = (instance.getDataByValue(value) as Record<string, any>)?.['DepartmentId'];
+                        }
                     }
-                } else if (columnName === 'Gender') {
-                    obj[columnName] = inputElement.checked ? 'Male' : 'Female';
-                } else {
-                    obj[columnName] = inputElement.value;
+                }
+            } else {
+                const inputElement: HTMLInputElement = curElement.querySelector('input');
+                if (inputElement) {
+                    const columnName: string = inputElement.name;
+                    if (!isNullOrUndefined(columnName)) {
+                        if (columnName === 'Gender') {
+                            obj[columnName] = inputElement.checked ? 'Male' : 'Female';
+                        } else {
+                            obj[columnName] = inputElement.value;
+                        }
+                    }
                 }
             }
         }
@@ -104,9 +111,10 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             dispatch({ type: 'SET_ACTIVE_DOCTOR', data: activeDoctorData });
         }
 
+        // Add safety check for Specialization
         const activityObj: Record<string, any> = {
             Name: dialogState === 'new' ? 'Added New Doctor' : 'Updated Doctor',
-            Message: `Dr.${obj['Name']}, ${obj['Specialization'].charAt(0).toUpperCase() + obj['Specialization'].slice(1)}`,
+            Message: `Dr.${obj['Name']}, ${obj['Specialization'] ? obj['Specialization'].charAt(0).toUpperCase() + obj['Specialization'].slice(1) : 'N/A'}`,
             Time: '10 mins ago',
             Type: 'doctor',
             ActivityTime: new Date()
@@ -124,10 +132,14 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
         }
 
         setIsOpen(false);
-        newDoctorObj.current.hide();
     };
 
     const updateWorkHours = (data: Record<string, any>): Record<string, any> => {
+        // Add safety check - if DutyTiming is not set, use default
+        if (!data['DutyTiming']) {
+            data['DutyTiming'] = dutyTimingsData[0]?.Id;
+        }
+        
         const dutyString: string = dutyTimingsData.filter((item: Record<string, any>) => item['Id'] === data['DutyTiming'])[0]['Text'];
         let startHour: string;
         let endHour: string;
@@ -189,37 +201,44 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
     };
 
     const showDetails = (): void => {
-        dialogState = 'edit';
-        title = 'Edit Doctor';
+        setDialogState('edit');
+        setTitle('Edit Doctor');
         setIsOpen(true);
-        newDoctorObj.current.show();
         activeDoctorData = dataService.activeDoctorData;
 
         const obj: Record<string, any> = activeDoctorData;
-        const formElement: HTMLInputElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
+        const formElements: HTMLElement[] = [].slice.call(document.querySelectorAll('.new-doctor-dialog .e-field'));
 
-        for (const curElement of formElement) {
-            const inputElement: HTMLInputElement = curElement.querySelector('input');
-            let columnName: string = inputElement.name;
+        for (const curElement of formElements) {
             const isCustomElement: boolean = curElement.classList.contains('e-ddl');
-
-            if (!isNullOrUndefined(columnName) || isCustomElement) {
-                if (columnName === '' && isCustomElement) {
-                    columnName = curElement.querySelector('select').name;
-                    const instance: any = ((inputElement as Element) as EJ2Instance).ej2_instances[0];
-                    instance.value = obj[columnName] as string;
-                    instance.dataBind();
-                } else if (columnName === 'Gender') {
-                    if (obj[columnName] === 'Male') {
-                        inputElement.checked = true;
-                    } else {
-                        curElement.querySelectorAll('input')[1].checked = true;
+            
+            if (isCustomElement) {
+                const instance: any = (curElement as EJ2Instance).ej2_instances?.[0];
+                if (instance && obj) {
+                    const columnName: string = instance.name || instance.element?.name;
+                    if (columnName && obj[columnName]) {
+                        instance.value = obj[columnName];
+                        instance.dataBind();
                     }
-                } else if (columnName === 'Mobile') {
-                    (((inputElement as Element) as EJ2Instance).ej2_instances[0] as MaskedTextBox).value =
-                        obj[columnName].replace(/[ -.*+?^${}()|[\]\\]/g, '');
-                } else {
-                    inputElement.value = obj[columnName] as string;
+                }
+            } else {
+                const inputElement: HTMLInputElement = curElement.querySelector('input');
+                if (inputElement) {
+                    const columnName: string = inputElement.name;
+                    if (!isNullOrUndefined(columnName)) {
+                        if (columnName === 'Gender') {
+                            if (obj[columnName] === 'Male') {
+                                inputElement.checked = true;
+                            } else {
+                                curElement.querySelectorAll('input')[1].checked = true;
+                            }
+                        } else if (columnName === 'Mobile') {
+                            (((inputElement as Element) as EJ2Instance).ej2_instances[0] as MaskedTextBox).value =
+                                obj[columnName].replace(/[ -.*+?^${}()|[\]\\]/g, '');
+                        } else {
+                            inputElement.value = obj[columnName] as string;
+                        }
+                    }
                 }
             }
         }
@@ -308,6 +327,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             <div><label></label></div>
                             <DropDownList
                                 id="Specialization"
+                                name="Specialization"
                                 width="160px"
                                 className="doctor-department e-field"
                                 placeholder="Department"
@@ -341,6 +361,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                     <div className="duty-container">
                         <DropDownList
                             id="DutyTiming"
+                            name="DutyTiming"
                             className="e-field"
                             width="100%"
                             placeholder="Duty Timing"
