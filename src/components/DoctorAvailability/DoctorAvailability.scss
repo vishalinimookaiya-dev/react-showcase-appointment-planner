@@ -1,111 +1,127 @@
 @import '../../common/common.scss';
 
-.e-list-template {
-    .e-list-header {
-        border-bottom: 0;
-        flex: auto;
-        font-weight: 600;
-        font-size: 16px;
-        color: $planner-font-color1 !important;
-        letter-spacing: 0.48px;
+.doctor-availability {
+    .availability-title {
+        display: flex;
         padding: 10px 16px;
+        align-items: center;
 
-        .e-headertemplate-text {
-            width: 100%;
+        .header-text {
+            flex: auto;
+            font-size: 16px;
+            font-weight: 600;
+            color: $planner-font-color1;
+            letter-spacing: 0.48px;
+        }
 
-            .availability-title {
-                display: flex;
+        .all-text {
+            flex: initial;
+            font-size: 13px;
+            font-weight: 400;
+            color: #5851E1;
+            letter-spacing: 0.39px;
+            text-align: right;
+            margin-right: 4px;
 
-                .header-text {
-                    flex: auto;
-                }
+            a {
+                color: inherit;
+                text-decoration: none;
 
-                .all-text {
-                    flex: initial;
-                    font-weight: 400;
-                    font-size: 13px;
-                    color: #5851E1;
-                    letter-spacing: 0.39px;
-                    text-align: right;
-                    margin-right: 4px;
+                &:hover {
+                    text-decoration: underline;
                 }
             }
         }
     }
 
+    .e-list-template,
+    .sf-listview.e-list-template {
+        overflow: auto;
+    }
+
+    .sf-list-container,
     .e-list-container {
         padding-top: 17.5px;
+    }
 
-        li.e-list-item {
-            border: none;
+    .sf-list-item,
+    .e-list-item {
+        border: none;
+        display: flex;
+        padding: 5px 16px;
+
+        .availabilty-container {
             display: flex;
-            padding: 5px 16px;
+            width: 100%;
+            align-items: center;
 
-            .availabilty-container {
+            .image-container {
                 display: flex;
+                align-items: center;
+                padding-left: 1px;
 
-                .image-container {
-                    display: flex;
-                    padding-left: 1px;
+                .doctor-image {
+                    display: inline-block;
+                    position: relative;
+                    width: 32px;
+                    height: 32px;
+                    padding: 0;
 
-                    .doctor-image {
-                        padding: 5px 0;
-                        position: relative;
+                    .doctor-avatar {
+                        display: block;
+                        height: 32px;
+                        width: 32px;
+                        border-radius: 16px;
+                        object-fit: cover;
+                    }
 
-                        img {
-                            height: 32px;
-                            width: 32px;
+                    .availability {
+                        &.busy,
+                        &.available,
+                        &.away {
+                            display: inline-block;
+                            border: 2px solid $planner-element-back-color;
                             border-radius: 16px;
+                            height: 12px;
+                            width: 12px;
+                            position: absolute;
+                            bottom: 0;
+                            right: 0;
                         }
 
-                        .availability {
+                        &.busy {
+                            background: #D40000;
+                        }
 
-                            &.busy,
-                            &.available,
-                            &.away {
-                                display: inline-block;
-                                border: 2px solid $planner-element-back-color;
-                                border-radius: 16px;
-                                height: 14px;
-                                width: 14px;
-                                position: absolute;
-                                top: 47%;
-                                left: 65%;
-                            }
+                        &.away {
+                            background: #FF8C2E;
+                        }
 
-                            &.busy {
-                                background: #D40000;
-                            }
-
-                            &.away {
-                                background: #FF8C2E;
-                            }
-
-                            &.available {
-                                background: #00D406;
-                            }
+                        &.available {
+                            background: #00D406;
                         }
                     }
                 }
+            }
 
-                .detail-container {
-                    display: grid;
-                    padding-left: 16px;
+            .detail-container {
+                display: flex;
+                flex-direction: column;
+                padding-left: 16px;
 
-                    .doctor-name {
-                        font-weight: 500;
-                        font-size: 13px;
-                        color: $planner-font-color2;
-                        letter-spacing: 0.39px;
-                        padding: 3px 0;
-                    }
+                .doctor-name {
+                    font-weight: 500;
+                    font-size: 13px;
+                    color: $planner-font-color2;
+                    letter-spacing: 0.39px;
+                    padding: 3px 0;
+                }
 
-                    .doctor-speciality {
-                        font-size: 10px;
-                        color: $planner-font-color2;
-                        letter-spacing: 0.3px;
-                        padding: 2px 0;
-                    }
+                .doctor-speciality {
+                    font-size: 10px;
+                    color: $planner-font-color2;
+                    letter-spacing: 0.3px;
+                    padding: 2px 0;
                 }
             }
         }

@@ -73,69 +73,75 @@
     }
 }
 
-.e-dialog.e-edit-dialog {
-    max-height: 495px !important;
+.patient-details-dialog {
+    .grid-edit-dialog {
+        width: 325px;
+        height: 360px;
 
-    .e-dlg-content {
-        .grid-edit-dialog {
-            width: 325px;
-            height: 360px;
+        .field-row {
+            display: flex;
+            padding: 5px 0;
 
-            .field-row {
-                display: flex;
+            label {
+                font-weight: 600;
+                font-size: 12px;
+                letter-spacing: 0.3px;
                 padding: 5px 0;
+            }
+
+            label,
+            span {
+                flex: 1;
+            }
+
+            span {
+                font-size: 14px;
+                color: $planner-font-color1;
+                letter-spacing: 0.39px;
+            }
+
+            &.history-row {
+                flex-direction: column;
 
                 label {
-                    font-weight: 600;
-                    font-size: 12px;
-                    letter-spacing: 0.3px;
-                    padding: 5px 0;
+                    color: $planner-element-bg-color !important;
                 }
 
-                label,
-                span {
-                    flex: 1;
-                }
-
-                span {
-                    font-size: 14px;
+                .history-content {
+                    padding: 5px;
+                    font-size: 13px;
                     color: $planner-font-color1;
                     letter-spacing: 0.39px;
+                    line-height: 18px;
+                    margin: 10px 0;
+                    border-left: 2px solid blue;
                 }
 
-                &.history-row {
-                    flex-direction: column;
-
-                    label {
-                        color: $planner-element-bg-color !important;
-                    }
-
-                    .history-content {
-                        padding: 5px;
-                        font-size: 13px;
-                        color: $planner-font-color1;
-                        letter-spacing: 0.39px;
-                        line-height: 18px;
-                        margin: 10px 0;
-                        border-left: 2px solid blue;
-                    }
-
-                    .empty-container {
-                        font-weight: 600;
-                        font-size: 15px;
-                        letter-spacing: 0.3px;
-                        padding: 5px 10px;
-                    }
+                .empty-container {
+                    font-weight: 600;
+                    font-size: 15px;
+                    letter-spacing: 0.3px;
+                    padding: 5px 10px;
                 }
             }
         }
     }
 
     .e-footer-content {
-
         :nth-child(1),
         :nth-child(2) {
             display: none;
+        }
+    }
+}
+
+.break-hour-dialog {
+    .e-dlg-content {
+        form {
+            div {
+                padding: 10px 0;
+                color: $planner-font-color1;
+            }
         }
     }
 }

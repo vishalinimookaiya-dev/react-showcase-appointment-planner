@@ -41,7 +41,7 @@ export const DoctorAvailability = () => {
             <div className="availabilty-container">
                 <div className='image-container'>
                     <span className='doctor-image'>
-                        <img src={loadImage(props.Text)} />
+                        <img className="doctor-avatar" src={loadImage(props.Text)} />
                         <span className={'availability ' + props.Availability}></span>
                     </span>
                 </div>

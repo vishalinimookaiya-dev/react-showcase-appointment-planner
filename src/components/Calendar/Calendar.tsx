@@ -692,7 +692,7 @@ const Calendar = () => {
                                     onChange={onDoctorSelect.bind(this)}
                                     itemTemplate={itemTemplate.bind(this)}
                                     footerTemplate={footerTemplate()}
-                                    popupSettings={{ height: '500px', width: '500px' }}
+                                    popupSettings={{ width: '250px' }}
                                     className={"e-specialist-doctors" + (isDevice ? " e-specialist-hide" : "")}
                                 />
                         </div>

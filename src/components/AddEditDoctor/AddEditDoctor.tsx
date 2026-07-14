@@ -273,7 +273,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             >
                 <form id="new-doctor-form">
                     <div className="name-container">
-                        <TextBox id="Name" name="Name" className="doctor-name e-field" placeholder="Doctor Name" />
+                        <TextBox id="Name" name="Name" className="doctor-name e-field" placeholder="Doctor Name" labelMode='Always' />
                     </div>
 
                     <div className="gender-container">
@@ -287,6 +287,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             </div>
                         </div>
                         <div className="mobile">
+                            <div><label>Mobile Number</label></div>
                             <MaskedTextBoxComponent
                                 id="DoctorMobile"
                                 name="Mobile"
@@ -299,11 +300,12 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                     </div>
 
                     <div className="email-container">
-                        <TextBox id="Email" name="Email" className="e-field" placeholder="Email" />
+                        <TextBox id="Email" name="Email" className="e-field" placeholder="Email" labelMode='Always'/>
                     </div>
 
                     <div className="education-container">
                         <div className="department">
+                            <div><label></label></div>
                             <DropDownList
                                 id="Specialization"
                                 width="160px"
@@ -311,10 +313,11 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                                 placeholder="Department"
                                 dataSource={specializationData}
                                 fields={fields}
+                                labelMode='Always'
                             />
                         </div>
                         <div className="education">
-                            <TextBox id="Education" name="Education" className="e-field" width="180px" placeholder="Education" />
+                            <TextBox id="Education" name="Education" className="e-field" width="180px" placeholder="Education" labelMode='Always'/>
                         </div>
                     </div>
 
@@ -331,7 +334,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             />
                         </div>
                         <div className="designation">
-                            <TextBox id="Designation" name="Designation" className="e-field" width="180px" placeholder="Designation" />
+                            <TextBox id="Designation" name="Designation" className="e-field" width="180px" placeholder="Designation" labelMode='Always'/>
                         </div>
                     </div>
 
@@ -343,6 +346,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             placeholder="Duty Timing"
                             dataSource={dutyTimingsData}
                             fields={fields}
+                            labelMode='Always'
                         />
                     </div>
                 </form>

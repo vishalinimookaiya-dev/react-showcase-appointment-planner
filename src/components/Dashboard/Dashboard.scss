@@ -31,24 +31,24 @@
                         white-space: nowrap;
                         padding: .5rem 0;
                     }
-                }
-            }
 
-            .link-text {
-                flex: initial;
-                font-size: 13px;
-                color: #5851e1;
-                letter-spacing: 0.39px;
-                text-align: right;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                padding: 0.5rem 0;
+                    .link-text {
+                        flex: initial;
+                        font-size: 13px;
+                        color: #5851e1;
+                        letter-spacing: 0.39px;
+                        text-align: right;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        padding: 0.5rem 0;
 
-                a {
-                    cursor: pointer;
-                    text-decoration: underline;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
+                        a {
+                            cursor: pointer;
+                            text-decoration: underline;
+                            text-overflow: ellipsis;
+                            overflow: hidden;
+                        }
+                    }
                 }
             }
         }
@@ -89,10 +89,6 @@
         line-height: 30px;
     }
 
-    header {
-        display: none;
-    }
-
     .list-display {
         padding-left: 20px;
 
@@ -119,49 +115,11 @@
             }
         }
 
-        .doctor-availability {
-            .e-list-template .e-list-container {
-                padding-top: 7px;
-            }
-
-            .availability-title {
-                display: flex;
-
-                .header-text {
-                    float: left;
-                    font-size: 16px;
-                    font-weight: 600;
-                    padding: 10px 16px;
-                    flex: auto;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .all-text {
-                    font-size: 13px;
-                    padding: 10px 16px;
-                    float: right;
-                    flex: initial;
-                    font-weight: 400;
-                    color: #5851e1;
-                    letter-spacing: 0.39px;
-                    text-align: right;
-                    margin-right: 4px;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    white-space: nowrap;
-                }
-            }
-
-        }
-
         .recent-activity {
             height: 375px;
             margin-bottom: 30px;
             width: 100%;
         }
-
     }
 }
 
@@ -258,12 +216,6 @@
     .planner-dashboard {
         display: block;
         margin: 20px 10px;
-
-        header {
-            margin-bottom: 28px;
-            margin-left: 10px;
-            display: block;
-        }
 
         .view-detail-display,
         .list-display {

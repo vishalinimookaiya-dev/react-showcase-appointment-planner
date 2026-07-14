@@ -46,6 +46,7 @@
 
             .specialist-value {
                 display: flex;
+                gap: 10px;
                 margin: 6px 0;
 
                 span:nth-child(1) {
@@ -148,11 +149,7 @@
                         font-size: 13px;
                         color: $planner-font-color1;
                         letter-spacing: 0.33px;
-                        overflow: hidden;
-
-                        &:hover {
-                            overflow: visible;
-                        }
+                        overflow: visible;
                     }
 
                     .specialist-experience {
@@ -198,13 +195,14 @@
 .specialist-value {
     display: flex;
     margin: 6px 0;
+    gap: 10px;
 
     span:nth-child(1) {
         border-radius: 6px;
         height: 12px;
         width: 12px;
         margin-left: 20px;
-        margin-top: 7px;
+        margin-top: 4px;
     }
 }
 
