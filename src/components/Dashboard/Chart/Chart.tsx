@@ -5,7 +5,11 @@ import {
     ChartPrimaryXAxis,
     ChartPrimaryYAxis,
     ChartSeriesCollection,
-    ChartSeries
+    ChartSeries,
+    ChartAxisTitle,
+    ChartAxisLabel,
+    ChartLegend,
+    ChartTitle
 } from '@syncfusion/react-charts';
 
 interface ChartProps {
@@ -103,55 +107,61 @@ export const ConsultationChart = ({
         return result;
     }, [currentViewEvents, firstDayOfWeek]);
     return (
-    <Chart id="chartcontainer" height="340px">
-        <ChartPrimaryXAxis
-            valueType="DateTime"
-            interval={1}
-            intervalType="Days"
-            
-            minimum={firstDayOfWeek}
-            maximum={addDays(firstDayOfWeek, 6)}
+        <Chart id="chartcontainer" height="340px">
+            <ChartTitle text="Consultation" position='Custom' x={60} y={15}/>
+            <ChartSeriesCollection>
+                <ChartSeries
+                    dataSource={chartData.diabetology}
+                    type="Spline"
+                    width={2}
+                    xField="Date"
+                    yField="EventCount"
+                    name="Diabetology"
+                    legendShape="Circle"
+                    fill="#60F238"
+                />
+                <ChartSeries
+                    dataSource={chartData.orthopaedics}
+                    type="Spline"
+                    width={2}
+                    xField="Date"
+                    yField="EventCount"
+                    name="Orthopaedics"
+                    legendShape="Circle"
+                    fill="#388CF5"
+                />
+                <ChartSeries
+                    dataSource={chartData.cardiology}
+                    type="Spline"
+                    width={2}
+                    xField="Date"
+                    yField="EventCount"
+                    name="Cardiology"
+                    legendShape="Circle"
+                    fill="#F29438"
+                />
+            </ChartSeriesCollection>
+            <ChartLegend visible={true} position='Top' />
+            <ChartPrimaryXAxis
+                valueType="DateTime"
+                interval={1}
+                intervalType="Days"
+                minimum={firstDayOfWeek}
+                maximum={addDays(firstDayOfWeek, 6)}
 
-        />
+            >
+                <ChartAxisTitle text='Date'></ChartAxisTitle>
+                <ChartAxisLabel format='MM/dd'/>
+            </ChartPrimaryXAxis>
 
-        <ChartPrimaryYAxis
-            minimum={0}
-            maximum={6}
-            interval={2}
-        />
-
-        <ChartSeriesCollection>
-            <ChartSeries
-                dataSource={chartData.diabetology}
-                type="Spline"
-                width={2}
-                xField="Date"
-                yField="EventCount"
-                name="Diabetology"
-                legendShape="Circle"
-                fill="#60F238"
-            />
-            <ChartSeries
-                dataSource={chartData.orthopaedics}
-                type="Spline"
-                width={2}
-                xField="Date"
-                yField="EventCount"
-                name="Orthopaedics"
-                legendShape="Circle"
-                fill="#388CF5"
-            />
-            <ChartSeries
-                dataSource={chartData.cardiology}
-                type="Spline"
-                width={2}
-                xField="Date"
-                yField="EventCount"
-                name="Cardiology"
-                legendShape="Circle"
-                fill="#F29438"
-            />
-        </ChartSeriesCollection>
-    </Chart>
-);
+            <ChartPrimaryYAxis
+                minimum={0}
+                maximum={6}
+                interval={2}
+                lineStyle={{ width: 1 }}
+            >
+                <ChartAxisTitle text='Patient'></ChartAxisTitle>
+            </ChartPrimaryYAxis>
+        </Chart>
+    );
 };

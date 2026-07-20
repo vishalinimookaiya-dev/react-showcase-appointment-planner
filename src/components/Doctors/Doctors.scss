@@ -35,30 +35,58 @@
     }
 
     .specialization-detail-wrapper {
+
         .specialization-types {
             display: flex;
             justify-content: flex-end;
 
             .specialization-ddl {
                 margin: 0 18px;
-                width: 200px !important;
+
+                /* Fluent selected value wrapper fix */
+                .sf-input-value.sf-content {
+                    display: flex !important;
+                    align-items: center !important;
+                    padding: 0 0 0 2px !important;
+                    margin: 0 !important;
+                }
+
+                .sf-multiselect-icon-wrapper {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .sf-clear-icon,
+                .sf-ddl-icon {
+                    display: flex !important;
+                    align-items: center;
+                    justify-content: center;
+                }
             }
 
             .specialist-value {
                 display: flex;
-                gap: 10px;
-                margin: 6px 0;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
 
-                span:nth-child(1) {
-                    border-radius: 6px;
-                    height: 12px;
+                span:first-child {
                     width: 12px;
-                    margin: 3px 6px;
+                    height: 12px;
+                    min-width: 12px;
+                    border-radius: 50%;
+                    margin: 0;
+                    flex-shrink: 0;
+                }
+
+                .name {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
         }
 
-        /* Specialist list item display */
         .specialist-display {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -192,19 +220,67 @@
     }
 }
 
-.specialist-value {
-    display: flex;
-    margin: 6px 0;
-    gap: 10px;
+#Specialization_popup,
+.sf-ddl.sf-popup {
 
-    span:nth-child(1) {
-        border-radius: 6px;
-        height: 12px;
+    .sf-list-item {
+        white-space: nowrap;
+    }
+
+    .specialist-value {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100%;
+    }
+
+    .specialist-value span:first-child {
         width: 12px;
-        margin-left: 20px;
-        margin-top: 4px;
+        height: 12px;
+        min-width: 12px;
+        border-radius: 50%;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .specialist-value .name {
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
+
+.department-value {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+
+    span:first-child {
+        width: 12px;
+        height: 12px;
+        min-width: 12px;
+        border-radius: 50%;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .name {
+        margin: 0;
+        padding: 0;
+        line-height: 20px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ==========================================
+   TOOLTIP
+========================================== */
 
 .e-tooltip-wrap {
     border-radius: 15px 15px 15px 0;
@@ -221,10 +297,12 @@
 }
 
 @media (max-width: 850px) {
+
     .doctors-wrapper {
         margin: 20px 10px;
 
         header {
+
             .module-title {
                 margin-left: 10px;
             }
@@ -246,11 +324,12 @@
         }
 
         .specialization-detail-wrapper {
+
             .specialization-types {
                 display: flex;
                 margin: 21px 0 16px 0;
 
-                .e-ddl.specialization-ddl {
+                .specialization-ddl {
                     flex: 1;
                     margin: 0;
                     width: 100% !important;
@@ -265,66 +344,6 @@
                 grid-template-columns: 1fr;
                 grid-gap: 10px;
                 padding: 0;
-
-                .specialist-item {
-                    .specialist-image {
-                        margin: 29.5px 16.5px 30.5px 11.3px;
-
-                        .profile {
-                            height: 60px !important;
-                            width: 60px !important;
-                            border-radius: 30px !important;
-                        }
-
-                        .availability {
-                            height: 12px;
-                            width: 12px;
-                            top: 60%;
-                            left: 65%;
-                        }
-                    }
-
-                    .specialist-detail {
-                        margin: 19px 0 23px;
-
-                        .name {
-                            height: 19px;
-                            margin-bottom: 2px;
-                            padding: 0;
-                        }
-
-                        .education {
-                            height: 14px;
-                            padding: 0;
-                            margin-bottom: 6px;
-                        }
-
-                        .specialist-experience {
-                            .specialization {
-                                padding: 0 12px 0 0 !important;
-                            }
-
-                            .experience {
-                                padding: 0 0 0 12px !important;
-                            }
-
-                            .specialization,
-                            .experience {
-                                display: flex;
-                                flex-direction: column;
-
-                                .label-text {
-                                    height: 16px;
-                                    margin-bottom: 6px;
-                                }
-
-                                .specialization-text {
-                                    height: 16px;
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }

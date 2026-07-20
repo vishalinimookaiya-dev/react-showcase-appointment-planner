@@ -228,11 +228,13 @@
     }
 }
 
-.break-hour-dialog.e-dialog {
+.break-hour-dialog {
     width: 445px;
     max-height: 98% !important;
 
+    .sf-dlg-content,
     .e-dlg-content {
+
         .break-hour-operations {
             font-weight: 600;
             font-size: 11px;
@@ -244,48 +246,52 @@
 
         .break-hour-header {
             display: flex;
+            align-items: center;
 
-            div {
-                &:nth-child(1) {
-                    flex: 0.25;
-                }
-
-                &:nth-child(2),
-                &:nth-child(3) {
-                    flex: 1;
-                    margin: 0 30px;
-                    font-weight: 600;
-                    font-size: 11px;
-                    color: $planner-font-color2;
-                    letter-spacing: 0.33px;
-                }
+            > div:nth-child(1) {
+                width: 48px;
+                min-width: 48px;
             }
-        }
 
-        :nth-child(3) {
-            &.break-hour-days {
-                padding-top: 7px !important;
+            > div:nth-child(2),
+            > div:nth-child(3) {
+                flex: 1;
+                margin: 0 30px;
+                font-weight: 600;
+                font-size: 11px;
+                color: $planner-font-color2;
+                letter-spacing: 0.33px;
             }
         }
 
         .break-hour-days {
             display: flex;
+            align-items: center;
             padding-top: 21px;
 
-            .day-button {
-                height: 32px;
-                width: 32px;
+            &:first-of-type {
+                padding-top: 7px;
+            }
 
+            .day-button {
+                width: 32px;
+                min-width: 32px;
+                height: 32px;
+
+                .sf-btn,
                 .e-btn {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    padding: 0;
                     background: $planner-element-bg-color;
                     border-color: $planner-element-bg-color;
-                    height: 32px;
-                    width: 32px;
                 }
 
                 &.TimeOff {
                     margin: 5px 0;
 
+                    .sf-btn,
                     .e-btn {
                         background: $planner-delete-btn-color;
                         border-color: $planner-delete-btn-color;
@@ -293,26 +299,32 @@
                 }
 
                 &.RemoveBreak {
+
+                    .sf-btn,
                     .e-btn {
                         background: $planner-element-back-color;
-                        border: 1px solid #C0C0C0;
+                        border: 1px solid #c0c0c0;
                         color: $planner-font-color1;
                     }
                 }
             }
 
             .start-container {
+                flex: 1;
                 margin: 0 14.4px 0 16px;
             }
 
-            .start-container,
             .end-container {
-                &.TimeOff {
-                    display: none;
-                }
+                flex: 1;
+            }
+
+            .start-container.TimeOff,
+            .end-container.TimeOff {
+                display: none;
             }
 
             .state-container {
+
                 &:not(.TimeOff) {
                     display: none;
                 }
@@ -325,6 +337,19 @@
                     letter-spacing: 0.39px;
                 }
             }
+        }
+
+        .sf-input-group,
+        .sf-timepicker {
+            width: 100%;
+        }
+    }
+
+    .sf-dlg-footer-content {
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
     }
 }

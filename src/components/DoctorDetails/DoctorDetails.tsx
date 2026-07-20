@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Internationalization, extend } from '@syncfusion/ej2-base';
-import { Button, Color, Size } from '@syncfusion/react-buttons';
+import { Button, Color, Size, Variant } from '@syncfusion/react-buttons';
 import { Dialog } from '@syncfusion/react-popups';
 import { TimePicker } from '@syncfusion/react-calendars';
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
@@ -394,6 +394,7 @@ export const DoctorDetails = () => {
                                         value={day['BreakStartHour']}
                                         clearButton={false}
                                         onChange={(e: any) => onBreakStartChange(day['Day'], e.value)}
+                                        variant={Variant.Outlined}
                                     />
                                 </div>
                                 <div className={"end-container " + day['State']}>
@@ -404,6 +405,7 @@ export const DoctorDetails = () => {
                                         value={day['BreakEndHour']}
                                         clearButton={false}
                                         onChange={(e: any) => onBreakEndChange(day['Day'], e.value)}
+                                        variant={Variant.Outlined}
                                     />
                                 </div>
                                 <div className={"state-container " + day['State']}>

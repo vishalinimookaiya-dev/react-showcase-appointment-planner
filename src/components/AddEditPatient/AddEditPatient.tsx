@@ -343,11 +343,11 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
             >
                 <form id='new-patient-form'>
                     <div className="field-container name-container">
-                        <TextBox id='Name' name='Name' className='patient-name e-field' placeholder='Patient Name' labelMode='Always'></TextBox>
+                        <TextBox id='Name' name='Name' className='patient-name e-field' placeholder='Patient Name' labelMode='Always' variant={Variant.Outlined}></TextBox>
                     </div>
                     <div className="field-container gender-container">
                         <div className="gender">
-                            <div><label>Gender</label></div>
+                            <div className='genderLabel'><label>Gender</label></div>
                             <div className='e-btn-group e-round-corner e-field'>
                                 <input type="radio" id="doctorCheckMale" name="Gender" value="Male" defaultChecked />
                                 <label className="e-btn" htmlFor="doctorCheckMale">Male</label>
@@ -367,6 +367,7 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
                                 labelMode="Always"
                                 clearButton={false}
                                 popupSettings={{ zIndex: 1000 }}
+                                variant={Variant.Outlined}
                             />
                         </div>
                     </div>
@@ -385,6 +386,7 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
                                 fields={fields}
                                 onChange={(args: any) => setBloodGroupValue(args.value as string)}
                                 popupSettings={{ zIndex: 1000 }}
+                                variant={Variant.Outlined}
                             />
                         </div>
                         <div className="mobile">
@@ -394,11 +396,11 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
                         </div>
                     </div>
                     <div className="field-container email-container">
-                        <TextBox className='e-field' id='Email' name='Email' placeholder='Email' labelMode='Always'>
+                        <TextBox className='e-field' id='Email' name='Email' placeholder='Email' labelMode='Always' variant={Variant.Outlined}>
                         </TextBox>
                     </div>
                     <div className="field-container symptom-container">
-                        <TextBox className='e-field' id='Symptoms' name='Symptoms' placeholder='Symptoms' labelMode='Always'>
+                        <TextBox className='e-field' id='Symptoms' name='Symptoms' placeholder='Symptoms' labelMode='Always' variant={Variant.Outlined}>
                         </TextBox>
                     </div>
                 </form>

@@ -59,8 +59,15 @@ export const DoctorAvailability = () => {
                 <span className='header-text'>Doctor's Availability</span>
                 <span className='all-text'><Link to='/doctors'>View All</Link></span>
             </div>
-            <ListView ref={availabilityObj} id='listview_template' style={{height:'88%', width:'100%'}} className='e-list-template'
-                dataSource={dataSource} itemTemplate={listTemplate.bind(this)}>
+            <ListView
+                ref={availabilityObj}
+                id='listview_template'
+                style={{height:'88%', width:'100%'}}
+                className='e-list-template'
+                dataSource={dataSource}
+                itemTemplate={listTemplate.bind(this)}
+                fields={{ id: 'Id', text: 'Name' }}
+            >
             </ListView>
         </>
     )

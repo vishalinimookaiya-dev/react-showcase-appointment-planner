@@ -1,64 +1,106 @@
 .new-patient-dialog {
     max-height: 98% !important;
 
-    .e-dlg-content {
+    .sf-dlg-content {
+        padding: 20px;
+
         #new-patient-form {
             .field-container {
                 padding-bottom: 16px;
             }
 
+            /* Gender + DOB row */
             .gender-container,
             .contact-container {
                 display: flex;
-
-                .gender {
-                    padding-right: 8px;
-                    flex: 1;
-
-                    .e-btn-group input:checked+label.e-btn {
-                        background-color: #e6e6e6;
-                        border-color: #adadad;
-                        box-shadow: inset 0 3px 5px #00000020;
-                        color: #333;
-                        outline: 0 solid #fff;
-                        outline-offset: 0;
-                    }
-                }
-
-                .mobile {
-                    padding-left: 8px;
-                    flex: 1;
-                }
+                align-items: flex-start;
+                gap: 16px;
             }
 
-            .contact-container .blood-group,
-            .gender-container .dob {
-                padding-left: 8px;
+            .gender,
+            .dob,
+            .blood-group,
+            .mobile {
                 flex: 1;
+                min-width: 0;
             }
 
-            .gender-container {
-                .gender {
+            .gender {
+                display: flex;
+                flex-direction: column;
+
+                > div:first-child {
+                    margin-bottom: 8px;
+                }
+
+                > div:first-child label {
+                    font-weight: 600;
+                    font-size: 12px;
+                    color: #333;
+                }
+
+                .e-btn-group {
                     display: flex;
-                    flex-direction: column;
+                    width: 100%;
+                    height: 40px;
 
-                    label:not(.e-btn) {
-                        font-weight: bold;
-                        color: #333;
-                        font-size: 12px;
-                        font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif, "-apple-system", "BlinkMacSystemFont";
-                    }
-
-                    .e-btn-group {
-                        height: 32px;
-                        margin-top: 8px;
-
-                        label {
-                            width: 50%;
-                        }
+                    label {
+                        flex: 1;
+                        text-align: center;
                     }
                 }
+
+                .e-btn-group input:checked + label.e-btn {
+                    background-color: #e6e6e6;
+                    border-color: #adadad;
+                    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.12);
+                    color: #333;
+                }
+                .genderLabel{
+                    height: 16px;
+                }
             }
+
+            .dob {
+                padding-left: 0;
+            }
+
+            .blood-group {
+                padding-right: 8px;
+
+                .sf-dropdown,
+                .sf-ddl {
+                    width: 100% !important;
+                }
+            }
+
+            .mobile {
+                padding-left: 8px;
+
+                .e-control-wrapper,
+                .e-input-group {
+                    width: 100% !important;
+                }
+            }
+
+            .name-container,
+            .email-container,
+            .symptom-container {
+                .sf-input-group,
+                .sf-control-wrapper {
+                    width: 100% !important;
+                }
+            }
+        }
+    }
+
+    .sf-dlg-footer-content {
+        padding: 16px 20px;
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
     }
 }

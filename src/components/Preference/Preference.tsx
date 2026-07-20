@@ -47,6 +47,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={views[1].Value}
+          style={{width:'335px'}}
         />
       </div>
 
@@ -60,6 +61,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={startHours[0].Value}
+          style={{width:'335px'}}
         />
       </div>
 
@@ -73,6 +75,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={endHours[0].Value}
+          style={{width:'335px'}}
         />
       </div>
 
@@ -86,6 +89,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={timeSlots[2].Value}
+          style={{width:'335px'}}
         />
       </div>
 
@@ -99,6 +103,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={colorCategory[0].Value}
+          style={{width:'335px'}}
         />
       </div>
 
@@ -112,6 +117,7 @@ export const Preference = () => {
           fields={fields}
           variant={Variant.Outlined}
           value={dayOfWeeks[0].Value}
+          style={{width:'335px'}}
         />
       </div>
     </div>

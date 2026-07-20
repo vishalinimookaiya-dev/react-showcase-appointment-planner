@@ -10,7 +10,6 @@
             flex: auto;
             font-size: 16px;
             font-weight: 600;
-            color: $planner-font-color1;
             letter-spacing: 0.48px;
         }
 
@@ -112,14 +111,12 @@
                 .doctor-name {
                     font-weight: 500;
                     font-size: 13px;
-                    color: $planner-font-color2;
                     letter-spacing: 0.39px;
                     padding: 3px 0;
                 }
 
                 .doctor-speciality {
                     font-size: 10px;
-                    color: $planner-font-color2;
                     letter-spacing: 0.3px;
                     padding: 2px 0;
                 }

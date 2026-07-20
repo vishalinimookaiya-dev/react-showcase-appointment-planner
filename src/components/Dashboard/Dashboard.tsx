@@ -144,9 +144,9 @@ export const Dashboard = () => {
                                     </div>
                                 </div>
                                 <div className="e-card-content">
-                                    <Grid dataSource={gridData} width="100%" height="160px">
+                                    <Grid dataSource={gridData} width="100%">
                                         <Columns>
-                                            <Column field="Time" width="80" textAlign="Left" />
+                                            <Column field="Time" width="100" textAlign="Left" />
                                             <Column field="Name" width="120" textAlign="Left" />
                                             <Column
                                                 field="DoctorName"

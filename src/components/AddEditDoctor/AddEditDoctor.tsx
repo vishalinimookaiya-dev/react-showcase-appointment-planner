@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useRef, forwardRef, useImperativeHandle, MutableRefObject, useState } from 'react';
-import { isNullOrUndefined } from '@syncfusion/react-base';
+import { isNullOrUndefined, Variant } from '@syncfusion/react-base';
 import { Button, Color } from '@syncfusion/react-buttons';
 import { FormValidator, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
 import { TextBox } from '@syncfusion/react-inputs';
@@ -292,7 +292,7 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
             >
                 <form id="new-doctor-form">
                     <div className="name-container">
-                        <TextBox id="Name" name="Name" className="doctor-name e-field" placeholder="Doctor Name" labelMode='Always' />
+                        <TextBox id="Name" name="Name" className="doctor-name e-field" placeholder="Doctor Name" labelMode='Always' variant={Variant.Outlined}/>
                     </div>
 
                     <div className="gender-container">
@@ -311,7 +311,6 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                                 id="DoctorMobile"
                                 name="Mobile"
                                 className="e-field"
-                                width="180px"
                                 placeholder="Mobile Number"
                                 mask="(999) 999-9999"
                             />
@@ -319,25 +318,25 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                     </div>
 
                     <div className="email-container">
-                        <TextBox id="Email" name="Email" className="e-field" placeholder="Email" labelMode='Always'/>
+                        <TextBox id="Email" name="Email" className="e-field" placeholder="Email" labelMode='Always' variant={Variant.Outlined}/>
                     </div>
 
                     <div className="education-container">
                         <div className="department">
-                            <div><label></label></div>
                             <DropDownList
                                 id="Specialization"
                                 name="Specialization"
-                                width="160px"
                                 className="doctor-department e-field"
                                 placeholder="Department"
                                 dataSource={specializationData}
                                 fields={fields}
                                 labelMode='Always'
+                                variant={Variant.Outlined}
+                                value={specializationData[0].Id}
                             />
                         </div>
                         <div className="education">
-                            <TextBox id="Education" name="Education" className="e-field" width="180px" placeholder="Education" labelMode='Always'/>
+                            <TextBox id="Education" name="Education" className="e-field" placeholder="Education" labelMode='Always' variant={Variant.Outlined}/>
                         </div>
                     </div>
 
@@ -347,14 +346,16 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                                 id="Experience"
                                 name="Experience"
                                 className="e-field"
-                                width="160px"
                                 placeholder="Experience"
                                 dataSource={experienceData}
                                 fields={fields}
+                                variant={Variant.Outlined}
+                                labelMode='Always'
+                                value={experienceData[0].Id}
                             />
                         </div>
                         <div className="designation">
-                            <TextBox id="Designation" name="Designation" className="e-field" width="180px" placeholder="Designation" labelMode='Always'/>
+                            <TextBox id="Designation" name="Designation" className="e-field" placeholder="Designation" labelMode='Always' variant={Variant.Outlined}/>
                         </div>
                     </div>
 
@@ -363,11 +364,12 @@ export const AddEditDoctor = forwardRef(({ refreshDoctors, calendarDropDownObj }
                             id="DutyTiming"
                             name="DutyTiming"
                             className="e-field"
-                            width="100%"
                             placeholder="Duty Timing"
                             dataSource={dutyTimingsData}
                             fields={fields}
                             labelMode='Always'
+                            variant={Variant.Outlined}
+                            value={dutyTimingsData[0].Id}
                         />
                     </div>
                 </form>

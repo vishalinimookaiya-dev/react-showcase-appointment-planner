@@ -5,7 +5,7 @@ import {
 } from '@syncfusion/ej2-base';
 import { Query, Predicate, DataManager } from '@syncfusion/react-data';
 import { Toast } from '@syncfusion/react-notifications';
-import { Button } from '@syncfusion/react-buttons';
+import { Button, Variant } from '@syncfusion/react-buttons';
 import { Dialog } from '@syncfusion/react-popups';
 import { ItemModel } from '@syncfusion/ej2-react-navigations';
 import {
@@ -694,6 +694,7 @@ const Calendar = () => {
                                     footerTemplate={footerTemplate()}
                                     popupSettings={{ width: '250px' }}
                                     className={"e-specialist-doctors" + (isDevice ? " e-specialist-hide" : "")}
+                                    variant={Variant.Outlined}
                                 />
                         </div>
                         <div className="add-event-container" style={{ display: 'none' }}>

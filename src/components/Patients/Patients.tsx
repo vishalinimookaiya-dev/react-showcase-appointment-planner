@@ -352,7 +352,7 @@ const Patients = () => {
 
       <Dialog
         ref={patientDetailsDialogObj}
-        style={{ width: '600px' }}
+        style={{ width: '400px' }}
         className="patient-details-dialog"
         modal={true}
         open={isPatientDetailsOpen}
