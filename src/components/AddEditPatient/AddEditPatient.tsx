@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { useRef, forwardRef, useImperativeHandle, MutableRefObject, useState } from 'react';
+import { useRef, forwardRef, useImperativeHandle, MutableRefObject } from 'react';
 import { Color, isNullOrUndefined, Variant } from '@syncfusion/react-base';
 import { Button } from '@syncfusion/react-buttons';
 import { Dialog } from '@syncfusion/react-popups';
 import { DropDownList } from '@syncfusion/react-dropdowns';
 import { EJ2Instance } from '@syncfusion/ej2-react-schedule';
 import { DatePicker, DatePickerChangeEvent } from '@syncfusion/react-calendars';
-import { FormValidator, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
+import { FormValidator, MaskedTextBoxComponent } from '@syncfusion/ej2-react-inputs';
 import { TextBox } from '@syncfusion/react-inputs';
 import { useData, useDataDispatch } from '../../context/DataContext';
 import { useActivityDispatch } from '../../context/ActivityContext';
@@ -299,19 +299,6 @@ export const AddEditPatient = forwardRef(({ refreshEvent, calendarComboBoxObj }:
         };
 
         renderFormValidator(formElement, rules, newPatientObj.current.element);
-    };
-
-    const onBeforeOpen = (args: any): void => {
-        const formElement: HTMLFormElement = args.element.querySelector('#new-patient-form');
-        if (formElement && formElement['ej2_instances']) {
-            return;
-        }
-
-        initFormValidator();
-    };
-
-    const onBeforeClose = (): void => {
-        resetFormFields();
     };
 
     const footerTemplate = (): JSX.Element => {

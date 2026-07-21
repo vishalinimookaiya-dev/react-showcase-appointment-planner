@@ -44,19 +44,6 @@ export const ConsultationChart = ({
     currentViewEvents,
     firstDayOfWeek
 }: ChartProps) => {
-    const chartArea = {
-        border: { width: 0 }
-    };
-
-    const titleStyle = {
-        textAlignment: 'Near'
-    };
-
-    const legendSettings = {
-        visible: true,
-        position: 'Top',
-        padding: 20
-    };
 
     const chartData: ChartData = useMemo(() => {
         const diabetologyData = currentViewEvents.filter(
