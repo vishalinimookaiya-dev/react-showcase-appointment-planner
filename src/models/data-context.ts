@@ -12,4 +12,5 @@ export class DataContextType {
     activePatientData: Record<string, any>;
     activePatientHistory: Record<string, any>[];
     bloodGroupData: Record<string, any>[];
+    timezoneData: Record<string, any>[];
 };

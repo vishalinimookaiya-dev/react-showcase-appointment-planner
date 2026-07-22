@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useRef, useEffect, forwardRef, useImperativeHandle, MutableRefObject, useState } from 'react';
 import { isNullOrUndefined, Variant } from '@syncfusion/react-base';
 import { Button, Color } from '@syncfusion/react-buttons';
-import { FormValidator, MaskedTextBoxComponent, MaskedTextBox } from '@syncfusion/ej2-react-inputs';
+import { FormValidator, MaskedTextBoxComponent } from '@syncfusion/ej2-react-inputs';
 import { TextBox } from '@syncfusion/react-inputs';
 import { EJ2Instance } from '@syncfusion/ej2-react-schedule';
 import { Dialog } from '@syncfusion/react-popups';

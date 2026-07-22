@@ -3,7 +3,7 @@ import { createContext, useContext, useReducer } from 'react';
 import { CalendarSettings, DataContextType } from '../models/models';
 import {
     patientsData, doctorsData, specializationData, hospitalData,
-    bloodGroupData
+    bloodGroupData, timezoneData
 } from '../datasource';
 
 const DataContext = createContext(null);
@@ -104,5 +104,6 @@ const initialData: DataContextType = {
     patientsData: patientsData,
     activePatientData: patientsData[0],
     activePatientHistory: hospitalData.filter((item: Record<string, any>) => item['PatientId'] === patientsData[0]['Id']),
-    bloodGroupData: bloodGroupData
+    bloodGroupData: bloodGroupData,
+    timezoneData: timezoneData
 };

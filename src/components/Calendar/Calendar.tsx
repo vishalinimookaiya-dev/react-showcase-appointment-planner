@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef, useEffect, useCallback, memo, useState } from 'react';
+import { useRef, useEffect, useCallback, memo, useState, useMemo, RefObject } from 'react';
 import {
     closest, Browser, extend, isNullOrUndefined
 } from '@syncfusion/react-base';
@@ -9,20 +9,29 @@ import { Toast } from '@syncfusion/react-notifications';
 import { Button, Color, Variant } from '@syncfusion/react-buttons';
 import { Dialog } from '@syncfusion/react-popups';
 import {
-    Scheduler, DayView, WeekView, WorkWeekView, MonthView
+    Scheduler, DayView, WeekView, WorkWeekView, MonthView, SchedulerEditorPopup, SchedulerEditorProps, SchedulerEditorSubmitEvent, TimezoneFields
 } from '@syncfusion/react-scheduler';
 import { DropDownList } from '@syncfusion/react-dropdowns';
+import { Form, FormField, FormState, IFormValidator, TextArea, TextBox, ValidationRules, Variant as InputVariant } from "@syncfusion/react-inputs";
+import { DatePicker, DatePickerChangeEvent, TimePicker, TimePickerChangeEvent } from "@syncfusion/react-calendars";
+import { UserIcon, TimelineDayIcon, DescriptionIcon, CloseIcon, PlusIcon } from "@syncfusion/react-icons";
 import { AddEditDoctor } from '../AddEditDoctor/AddEditDoctor';
 import { AddEditPatient } from '../AddEditPatient/AddEditPatient';
 import { TreeWaitingList } from './TreeWaitingList/TreeWaitingList';
 import { DialogWaitingList } from './DialogWaitingList/DialogWaitingList';
 import { CalendarSettings } from '../../models/calendar-settings';
 import { CalendarData } from '../../models/calendar-data';
-import { useData, useDataDispatch } from '../../context/DataContext';
-import { useActivityDispatch } from '../../context/ActivityContext';
-import {  updateActiveItem, loadImage, getString } from '../../util';
+import { useData } from '../../context/DataContext';
+import { updateActiveItem, loadImage, getString } from '../../util';
 import './Calendar.scss';
-import { CloseIcon } from "@syncfusion/react-icons"
+
+interface AppointmentData {
+    PatientId: number;
+    DoctorId: number;
+    Symptoms: string;
+    StartTime: Date;
+    EndTime: Date;
+}
 
 const Calendar = () => {
     const dataService = useData();
@@ -35,6 +44,14 @@ const Calendar = () => {
     const treeObj = useRef(null);
     const waitingObj = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
+
+    const formDataRef = useRef<Partial<AppointmentData>>({});
+    const formRef: RefObject<IFormValidator | null> = useRef<IFormValidator>(null);
+    const isSubmittedRef = useRef(false);
+    const titleRef = useRef<string>('');
+    const locationRef = useRef<string>('');
+    const allDayRef = useRef<boolean>(false);
+    const timezoneRef = useRef<string>('');
 
     const isDevice: boolean = Browser.isDevice;
     const position: Record<string, any> = { X: 'Right', Y: 'Bottom' };
@@ -70,6 +87,7 @@ const Calendar = () => {
     const activeDoctorData = useRef([]);
     const specialistData: Record<string, any>[] = dataService.doctorsData;
     const doctorsData: Record<string, any>[] = dataService.doctorsData;
+    const timezoneDataList: Record<string, any>[] = dataService.timezoneData;
     const resourceDataSource: Record<string, any>[] = dataService.doctorsData;
     const startHour = calendarSettings.calendar['start'];
     const endHour: string = calendarSettings.calendar['end'];
@@ -82,6 +100,23 @@ const Calendar = () => {
     );
     const currentDate = useRef(selectedDate);
     const toastWidth = isDevice ? '300px' : '580px';
+
+    const formRules: ValidationRules = {
+        patientName: {
+            required: [true, 'Patient name is required']
+        },
+        symptoms: {
+            required: [true, 'Symptoms are required']
+        }
+    };
+
+    const defaultAppointmentData: AppointmentData = {
+        PatientId: patientsData.length > 0 ? patientsData[0].Id : 1,
+        DoctorId: doctorsData.length > 0 ? doctorsData[0].Id : 1,
+        Symptoms: '',
+        StartTime: new Date(),
+        EndTime: new Date()
+    };
 
     useEffect(() => {
         updateActiveItem('calendar');
@@ -395,7 +430,7 @@ const Calendar = () => {
                         className="close-icon"
                         onClick={quickInfoCloseClick}
                         type="button"
-                        icon={<CloseIcon/>}
+                        icon={<CloseIcon />}
                         variant={Variant.Outlined}
                         color={Color.Secondary}
                     >
@@ -546,6 +581,417 @@ const Calendar = () => {
         );
     };
 
+    const customEditor = (props: SchedulerEditorProps) => {
+        const { action, data, originalData, open } = props;
+
+        const [formData, setFormData] = useState<AppointmentData>(defaultAppointmentData);
+        const [formState, setFormState] = useState<FormState>();
+        const [title, setTitle] = useState<string>('');
+        const [location, setLocation] = useState<string>('');
+        const [allDay, setAllDay] = useState<boolean>(false);
+        const [timezone, setTimezone] = useState<boolean>(false);
+        const [repeat, setRepeat] = useState<string>('Never');
+        const [startTimezone, setStartTimezone] = useState<string>('Asia/Calcutta');
+        const [endTimezone, setEndTimezone] = useState<string>('Asia/Calcutta');
+
+        useEffect(() => {
+            formDataRef.current = formData;
+        }, [formData]);
+
+        useEffect(() => {
+            titleRef.current = title;
+            locationRef.current = location;
+        }, [title, location]);
+
+        useEffect(() => {
+            allDayRef.current = allDay;
+        }, [allDay]);
+
+        useEffect(() => {
+            timezoneRef.current = startTimezone;
+        }, [startTimezone]);
+
+        useEffect(() => {
+            isSubmittedRef.current = false;
+            if (!open) {
+                setFormData(defaultAppointmentData);
+                setTitle('');
+                setLocation('');
+                setAllDay(false);
+                setTimezone(false);
+                setRepeat('Never');
+                setStartTimezone('Asia/Calcutta');
+                setEndTimezone('Asia/Calcutta');
+                return;
+            }
+            if (action === 'Edit' && originalData) {
+                setFormData(originalData as unknown as AppointmentData);
+                setTitle((originalData as any)['Name'] || '');
+                setLocation((originalData as any)['Location'] || '');
+                setAllDay((originalData as any)['IsAllDay'] || false);
+                const eventTz = (originalData as any)['StartTimezone'] || 'Asia/Calcutta';
+                setStartTimezone(eventTz);
+                setEndTimezone(eventTz);
+                setTimezone(!!(originalData as any)['StartTimezone']);
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    StartTime: data?.startTime ? new Date(data.startTime) : prev.StartTime,
+                    EndTime: data?.endTime ? new Date(data.endTime) : prev.EndTime,
+                }));
+                setStartTimezone('Asia/Calcutta');
+                setEndTimezone('Asia/Calcutta');
+                setTimezone(false);
+            }
+        }, [open, action, originalData, data?.startTime, data?.endTime]);
+
+        const initialFormValues = useMemo(() => ({
+            patientName: formData.PatientId,
+            doctorName: formData.DoctorId,
+            symptoms: formData.Symptoms,
+            from: formData.StartTime,
+            to: formData.EndTime,
+        }), [formData.PatientId, formData.DoctorId, formData.Symptoms, formData.StartTime, formData.EndTime]);
+
+        const selectedDoctor = doctorsData.find(d => d.Id === formData.DoctorId);
+        const selectedDepartment = specialistCategory.find(d => d.DepartmentId === selectedDoctor?.DepartmentId);
+
+        const getSelectedPatientName = (patientId: number): string => {
+            const patient = patientsData.find(p => p.Id === patientId);
+            return patient?.Name?.toString() || '';
+        };
+
+        return (
+            <SchedulerEditorPopup
+                {...props}
+                style={{ width: '600px' }}
+                dialogProps={{
+                    open: open as boolean,
+                    header: action === 'Add' ? 'Add Appointment' : 'Edit Appointment',
+                    animation: { effect: 'FadeZoom', duration: 400, delay: 0 }
+                }}
+            >
+                <div className='custom-editor-form-container' style={{ padding: '20px' }}>
+                    <Form
+                        ref={formRef}
+                        rules={formRules}
+                        validateOnChange={true}
+                        onFormStateChange={setFormState}
+                        initialValues={initialFormValues}
+                    >
+                        {/* Patient Name Field */}
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>PATIENT NAME</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <FormField name="patientName">
+                                    <DropDownList
+                                        variant={InputVariant.Outlined}
+                                        placeholder="Select Patient"
+                                        dataSource={patientsData}
+                                        fields={{ text: 'Name', value: 'Id' }}
+                                        value={formData.PatientId}
+                                        onChange={(e: any) => {
+                                            const selectedPatientName = getSelectedPatientName(e.value as number);
+                                            setFormData(prev => ({ ...prev, PatientId: e.value as number }));
+                                            setTitle(selectedPatientName);
+                                            formState?.onChange('patientName', { value: e.value });
+                                        }}
+                                    />
+                                    {formState && (formState.modified['patientName'] || isSubmittedRef.current) && formState.errors['patientName'] && (
+                                        <div className="sf-form-error">{formState.errors['patientName']}</div>
+                                    )}
+                                </FormField>
+                                <Button
+                                    onClick={onAddPatient}
+                                    type="button"
+                                    icon={<PlusIcon />}
+                                    color={Color.Primary}
+                                    style={{borderRadius:"999px"}}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Title and Location in one row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                            <div>
+                                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Title</label>
+                                <TextBox
+                                    variant={InputVariant.Outlined}
+                                    value={title}
+                                    onChange={(e: any) => setTitle((e.value as string) ?? '')}
+                                    placeholder="Title"
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Location</label>
+                                <TextBox
+                                    variant={InputVariant.Outlined}
+                                    value={location}
+                                    onChange={(e: any) => setLocation((e.value as string) ?? '')}
+                                    placeholder="Location"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Start Date and Start Time */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: allDay ? '1fr' : '1fr 1fr',
+                            gap: '15px',
+                            marginBottom: '15px'
+                        }}>
+                            <div>
+                                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Start date</label>
+                                <DatePicker
+                                    variant={InputVariant.Outlined}
+                                    placeholder="Start Date"
+                                    clearButton={false}
+                                    value={formData.StartTime}
+                                    onChange={(e: DatePickerChangeEvent) => {
+                                        if (!e.value) return;
+                                        const newDate = new Date(e.value);
+                                        setFormData(prev => {
+                                            const updated = new Date(prev.StartTime);
+                                            updated.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+                                            return { ...prev, StartTime: updated };
+                                        });
+                                    }}
+                                    format="dd/MM/yy"
+                                />
+                            </div>
+                            {!allDay && (
+                                <div>
+                                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Start time</label>
+                                    <TimePicker
+                                        variant={InputVariant.Outlined}
+                                        placeholder="Start Time"
+                                        clearButton={false}
+                                        value={formData.StartTime}
+                                        onChange={(e: TimePickerChangeEvent) => {
+                                            if (!e.value) return;
+                                            const newTime = new Date(e.value);
+                                            setFormData(prev => {
+                                                const updated = new Date(prev.StartTime);
+                                                updated.setHours(newTime.getHours(), newTime.getMinutes(), 0, 0);
+                                                return { ...prev, StartTime: updated };
+                                            });
+                                        }}
+                                        format="hh:mm a"
+                                        step={30}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* End Date and End Time */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: allDay ? '1fr' : '1fr 1fr',
+                            gap: '15px',
+                            marginBottom: '15px'
+                        }}>
+                            <div>
+                                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>End date</label>
+                                <DatePicker
+                                    variant={InputVariant.Outlined}
+                                    placeholder="End Date"
+                                    clearButton={false}
+                                    value={formData.EndTime}
+                                    onChange={(e: DatePickerChangeEvent) => {
+                                        if (!e.value) return;
+                                        const newDate = new Date(e.value);
+                                        setFormData(prev => {
+                                            const updated = new Date(prev.EndTime);
+                                            updated.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+                                            return { ...prev, EndTime: updated };
+                                        });
+                                    }}
+                                    format="dd/MM/yy"
+                                />
+                            </div>
+                            {!allDay && (
+                                <div>
+                                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>End time</label>
+                                    <TimePicker
+                                        variant={InputVariant.Outlined}
+                                        placeholder="End Time"
+                                        clearButton={false}
+                                        value={formData.EndTime}
+                                        onChange={(e: TimePickerChangeEvent) => {
+                                            if (!e.value) return;
+                                            const newTime = new Date(e.value);
+                                            setFormData(prev => {
+                                                const updated = new Date(prev.EndTime);
+                                                updated.setHours(newTime.getHours(), newTime.getMinutes(), 0, 0);
+                                                return { ...prev, EndTime: updated };
+                                            });
+                                        }}
+                                        format="hh:mm a"
+                                        step={30}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* All day Checkbox and Timezone Checkbox */}
+                        <div style={{ display: 'flex', gap: '30px', marginBottom: '15px' }}>
+                            <div>
+                                <input
+                                    type="checkbox"
+                                    id="allday"
+                                    checked={allDay}
+                                    onChange={(e) => setAllDay(e.target.checked)}
+                                />
+                                <label htmlFor="allday" style={{ marginLeft: '8px' }}>All day</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="checkbox"
+                                    id="timezone"
+                                    checked={timezone}
+                                    onChange={(e) => setTimezone(e.target.checked)}
+                                />
+                                <label htmlFor="timezone" style={{ marginLeft: '8px' }}>Timezone</label>
+                            </div>
+                        </div>
+
+                        {/* Timezone Fields - Only shown when timezone checkbox is checked */}
+                        {timezone && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                                <div>
+                                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px', width: "100%" }}>Start Timezone</label>
+                                    <DropDownList
+                                        variant={InputVariant.Outlined}
+                                        dataSource={timezoneDataList}
+                                        fields={{ text: 'text', value: 'value' }}
+                                        value={startTimezone}
+                                        onChange={(e: any) => setStartTimezone((e.value as string) ?? 'Asia/Calcutta')}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px', width: "100%" }}>End Timezone</label>
+                                    <DropDownList
+                                        variant={InputVariant.Outlined}
+                                        dataSource={timezoneDataList}
+                                        fields={{ text: 'text', value: 'value' }}
+                                        value={endTimezone}
+                                        onChange={(e: any) => setEndTimezone((e.value as string) ?? 'Asia/Calcutta')}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Repeat Dropdown */}
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Repeat</label>
+                            <DropDownList
+                                variant={InputVariant.Outlined}
+                                dataSource={['Never', 'Daily', 'Weekly', 'Monthly', 'Yearly']}
+                                value={repeat}
+                                onChange={(e: any) => setRepeat((e.value as string) ?? 'Never')}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '15px'}}>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Department</label>
+                            <DropDownList
+                                variant={InputVariant.Outlined}
+                                placeholder="Select Department"
+                                dataSource={specialistCategory}
+                                fields={{ text: 'Text', value: 'DepartmentId' }}
+                                value={selectedDepartment?.DepartmentId || ''}
+                                onChange={(e: any) => {
+                                    const dept = specialistCategory.find(d => d.DepartmentId === e.value);
+                                    if (dept) {
+                                        const doctorInDept = doctorsData.find(d => d.DepartmentId === dept.DepartmentId);
+                                        if (doctorInDept) {
+                                            setFormData(prev => ({ ...prev, DoctorId: doctorInDept.Id }));
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '15px'}}>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Consultation</label>
+                            <FormField name="doctorName">
+                                <DropDownList
+                                    variant={InputVariant.Outlined}
+                                    placeholder="Select Doctor"
+                                    dataSource={doctorsData}
+                                    fields={{ text: 'Name', value: 'Id' }}
+                                    value={formData.DoctorId}
+                                    onChange={(e: any) => {
+                                        setFormData(prev => ({ ...prev, DoctorId: e.value as number }));
+                                        formState?.onChange('doctorName', { value: e.value as number });
+                                    }}
+                                />
+                            </FormField>
+                        </div>
+                        {/* Symptom/Notes Field */}
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>Symptom</label>
+                            <FormField name="symptoms">
+                                <TextArea
+                                    variant={InputVariant.Outlined}
+                                    value={formData.Symptoms}
+                                    placeholder="Symptom"
+                                    labelMode='Never'
+                                    onChange={(e: any) => {
+                                        setFormData(prev => ({ ...prev, Symptoms: (e.value as string) ?? '' }));
+                                        formState?.onChange('symptoms', { value: e.value });
+                                    }}
+                                    rows={4}
+                                    className='sf-full-width'
+                                />
+                                {formState && (formState.modified['symptoms'] || isSubmittedRef.current) && !formState.valid['symptoms'] && (
+                                    <div className="sf-form-error">{formState.errors['symptoms']}</div>
+                                )}
+                            </FormField>
+                        </div>
+                    </Form>
+                </div>
+            </SchedulerEditorPopup>
+        );
+    };
+
+    const handleEditorSave = (args: SchedulerEditorSubmitEvent) => {
+        isSubmittedRef.current = true;
+        const isValid = formRef.current?.validate();
+        if (!isValid) {
+            args.cancel = true;
+            return;
+        }
+        isSubmittedRef.current = false;
+
+        let startTime: Date =
+            formDataRef.current.StartTime
+                ? new Date(formDataRef.current.StartTime)
+                : new Date();
+        let endTime: Date =
+            formDataRef.current.EndTime
+                ? new Date(formDataRef.current.EndTime)
+                : new Date();
+
+        if (allDayRef.current) {
+            startTime.setHours(0, 0, 0, 0);
+            endTime.setHours(23, 59, 59, 999);
+        }
+
+        const existingId = args.data?.Id;
+
+        args.data = {
+            ...args.data,
+            Id: existingId,
+            ...formDataRef.current,
+            Name: titleRef.current || args.data?.Name,
+            Location: locationRef.current || args.data?.Location,
+            StartTime: startTime,
+            EndTime: endTime,
+            IsAllDay: allDayRef.current,
+            StartTimezone: timezoneRef.current,
+            EndTimezone: timezoneRef.current
+        };
+    };
+
     return (
         <>
             <div className="planner-calendar">
@@ -600,6 +1046,8 @@ const Calendar = () => {
                                 dataSource: schedulerEvents
                             }}
                             dateHeader={dateHeaderTemplate}
+                            onEditorSubmit={handleEditorSave}
+                            editor={customEditor}
                         >
                             <DayView />
                             <WeekView />

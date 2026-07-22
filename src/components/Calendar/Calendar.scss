@@ -841,3 +841,12 @@
 .sf-popup.sf-popup-open {
     box-shadow: 0 4px 12px rgba(134, 96, 207, 0.35);
 }
+
+.sf-header-cells {
+    justify-content: center;
+}
+
+.sf-full-width {
+    display: block;
+    width: 100% !important;
+}
